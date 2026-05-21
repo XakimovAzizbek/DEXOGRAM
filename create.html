@@ -13,38 +13,31 @@
         <div class="back-btn" onclick="window.location.href='home.html'">
             <i class="fa-solid fa-arrow-left"></i>
         </div>
-        <div class="page-title">Yangi Reels ulashish</div>
-        <div style="width: 24px;"></div> 
+        <div class="page-title">Yangi post yaratish</div>
+        <div style="width: 24px;"></div>
     </header>
 
     <main class="create-container">
-        
-        <div class="input-section">
-            <label for="youtubeLinkInput" class="section-label">
-                <i class="fa-brands fa-youtube" style="color: #ff0000;"></i> YouTube Video yoki Shorts Havolasi:
-            </label>
-            <input type="text" id="youtubeLinkInput" placeholder="https://youtube.com/shorts/... yoki https://youtu.be/..." autocomplete="off">
-            <p class="error-message" id="linkError">Havola xato! Iltimos, to'g'ri YouTube havolasini kiriting.</p>
-        </div>
-
-        <div class="preview-section" id="previewSection" style="display: none;">
-            <p class="section-label"><i class="fa-solid fa-eye"></i> Oldindan ko'rish:</p>
-            <div class="video-preview-wrapper">
-                <iframe id="youtubePreviewFrame" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        <div class="upload-box" id="uploadBox">
+            <input type="file" id="videoInput" accept="video/*" hidden>
+            <div class="upload-placeholder" id="uploadPlaceholder">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <p>Galereyadan video tanlang</p>
+                <span>Maksimal hajm: 20-30 MB tavsiya etiladi</span>
             </div>
+            <video id="videoPreview" style="display: none; width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px;" controls></video>
         </div>
 
         <div class="caption-section">
-            <label for="captionInput" class="section-label"><i class="fa-solid fa-pen-nib"></i> Video tavsifi (Caption):</label>
-            <textarea id="captionInput" placeholder="Video haqida biror narsa yozing... #dexogram #reels #trend" rows="4"></textarea>
+            <textarea id="captionInput" placeholder="Video haqida biror narsa yozing... #reels #trend #dexo" rows="4"></textarea>
         </div>
 
         <div class="loader-container" id="loaderContainer" style="display: none;">
             <div class="spinner"></div>
-            <p id="progressText">Ma'lumotlar Firebase-ga yozilmoqda...</p>
+            <p id="progressText">Video Telegramga yuklanmoqda...</p>
         </div>
 
-        <button class="share-btn" id="shareBtn" disabled>Postni ulashish (Share)</button>
+        <button class="share-btn" id="shareBtn" disabled>Ulashish (Share)</button>
     </main>
 
     <nav class="bottom-nav">
@@ -64,12 +57,7 @@
             <i class="fa-solid fa-clapperboard"></i>
             <span>Reels</span>
         </a>
-        <a href="profile.html" class="nav-item">
-            <i class="fa-regular fa-user"></i>
-            <span>Profile</span>
-        </a>
     </nav>
 
-    <script type="module" src="create.js"></script>
 </body>
 </html>
