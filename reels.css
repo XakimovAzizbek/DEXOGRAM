@@ -1,4 +1,4 @@
-/* Umumiy nollashtirish va sozlamalar */
+/* Umumiy nollashtirish */
 * {
     margin: 0;
     padding: 0;
@@ -23,25 +23,24 @@ body {
     scroll-behavior: smooth;
 }
 
-/* Skrolni yashirish (Chrome, Safari va h.k.) */
 .reels-container::-webkit-scrollbar {
-    display: none;
+    display: none; /* Skrolbarni yashirish */
 }
 
-/* Har bitta to'liq ekranli video kartochkasi */
+/* Har bitta Reels kartochkasi */
 .reels-card {
     width: 100vw;
     height: calc(100vh - 60px);
     scroll-snap-align: start;
     position: relative;
     background-color: #000000;
-    overflow: hidden; /* iFrame chetlarini kesib tashlash uchun */
+    overflow: hidden; /* Ortiqcha qismlarni kesish majburiy */
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-/* Telegram iFrame o'lchamlarini kattalashtirib, ortiqcha panellarni yashirish */
+/* Telegram iFrame-ni 100% to'liq ekranga moslash va aldash */
 .video-wrapper {
     width: 100%;
     height: 100%;
@@ -51,84 +50,82 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 1;
 }
 
+/* iFrame ichidagi yozuvlarni ekrandan tashqariga chiqarib haydash */
 .video-wrapper iframe {
-    width: 100%;
-    height: 130%; /* Balandlikni ortiqcha qismlar yashirinishi uchun kattalashtiramiz */
-    border: none;
-    transform: scale(1.15); /* Videoni to'liq ekranga yoyish */
-    pointer-events: auto;
+    width: 100% !important;
+    height: 145% !important; /* Balandlikni juda katta qilamiz, shunda yozuvlar pastga tushib ketadi */
+    border: none !important;
+    transform: scale(1.6) !important; /* Videoni ekranga majburlab yoyish */
+    pointer-events: auto !important;
 }
 
-/* Video ustidagi ma'lumotlar (Pastki qism) */
+/* Video ustidagi niklar va ma'lumotlar */
 .reels-overlay {
     position: absolute;
     bottom: 25px;
     left: 16px;
-    right: 80px; /* Tugmalarga tegib ketmasligi uchun */
+    right: 85px;
     z-index: 10;
-    pointer-events: none; /* Video bosilishiga xalaqit bermaslik */
+    pointer-events: none; /* Kliklarni to'smaydi */
 }
 
 .reels-user-info {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
+    gap: 8px;
+    margin-bottom: 8px;
 }
 
 .reels-avatar {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     border: 2px solid #ffffff;
-    background: linear-gradient(45deg, #f09433, #e6683c, #dc2743);
+    background: linear-gradient(45deg, #f09433, #dc2743, #bc1888);
     display: flex;
     justify-content: center;
     align-items: center;
-    font-weight: 700;
+    font-weight: bold;
     font-size: 14px;
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    color: #ffffff;
 }
 
 .reels-username {
     font-weight: 600;
-    font-size: 16px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    font-size: 15px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
 }
 
 .reels-user-id {
-    font-size: 11px;
+    font-size: 10px;
     background-color: rgba(255, 255, 255, 0.25);
     padding: 3px 8px;
-    border-radius: 20px;
-    color: #ffffff;
+    border-radius: 12px;
     backdrop-filter: blur(5px);
     font-weight: 500;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
 }
 
 .reels-caption {
-    font-size: 14px;
+    font-size: 13.5px;
     color: #ffffff;
     line-height: 1.4;
-    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.9);
-    max-height: 55px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+    max-height: 50px;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-weight: 400;
 }
 
-/* O'ng tomondagi Sidebar (Like, Share boshqaruvlari) */
+/* O'ng tomondagi Sidebar (Like, Share) */
 .reels-sidebar {
     position: absolute;
-    right: 14px;
+    right: 16px;
     bottom: 35px;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 22px;
     z-index: 10;
     align-items: center;
 }
@@ -138,51 +135,47 @@ body {
     flex-direction: column;
     align-items: center;
     cursor: pointer;
-    pointer-events: auto; /* Bosishni faollashtirish */
+    pointer-events: auto;
 }
 
 .sidebar-icon i {
     font-size: 28px;
     color: #ffffff;
-    filter: drop-shadow(0px 3px 5px rgba(0,0,0,0.7));
-    transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    filter: drop-shadow(0px 2px 5px rgba(0,0,0,0.7));
+    transition: transform 0.1s ease;
 }
 
-/* Layk bosilgandagi qizil effekt */
+.sidebar-icon i:active {
+    transform: scale(1.3);
+}
+
 .sidebar-icon i.fa-heart.liked {
     color: #ff2b55 !important;
-    animation: hitLike 0.3s ease-in-out;
 }
 
 .sidebar-icon span {
     font-size: 12px;
-    margin-top: 6px;
+    margin-top: 4px;
     font-weight: 600;
     text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-    color: #ffffff;
 }
 
-@keyframes hitLike {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.4); }
-    100% { transform: scale(1); }
-}
-
-/* Loader / Spinner */
+/* Loader kunji */
 .reels-loading {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     height: 100%;
-    gap: 15px;
+    gap: 12px;
+    background-color: #000;
 }
 
 .spinner {
-    width: 42px;
-    height: 42px;
-    border: 4px solid rgba(255, 255, 255, 0.1);
-    border-top: 4px solid #ff2b55;
+    width: 36px;
+    height: 36px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top: 3px solid #ff2b55;
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -192,7 +185,7 @@ body {
     100% { transform: rotate(360deg); }
 }
 
-/* Pastki Navbar */
+/* Bottom Navbar */
 .bottom-nav {
     position: fixed;
     bottom: 0;
@@ -205,7 +198,6 @@ body {
     justify-content: space-around;
     align-items: center;
     z-index: 1000;
-    padding-bottom: env(safe-area-inset-bottom);
 }
 
 .nav-item {
@@ -213,7 +205,7 @@ body {
     flex-direction: column;
     align-items: center;
     text-decoration: none;
-    color: #666666;
+    color: #555555;
     width: 20%;
 }
 

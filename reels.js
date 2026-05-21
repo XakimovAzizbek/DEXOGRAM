@@ -18,57 +18,55 @@ const db = getDatabase(app);
 
 const reelsContainer = document.getElementById('reelsContainer');
 
-// Telegram foydalanuvchisini aniqlash
+// Telegram WebApp sozlamalari
 const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
-// Kirgan foydalanuvchining shaxsiy Telegram ID raqami
+// Kirgan foydalanuvchining haqiqiy Telegram ID raqami
 const currentUserId = tg.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : "8383416300"; 
 
-function loadDexoReels() {
+function loadDexoGramReels() {
     const allVideosRef = ref(db, 'users_videos');
 
     onValue(allVideosRef, (snapshot) => {
         const rootData = snapshot.val();
-        
         if (!rootData) {
-            reelsContainer.innerHTML = '<p style="text-align:center; padding:50px; color:#64748b;">Hozircha Reels videolar yuklanmagan.</p>';
+            reelsContainer.innerHTML = '<p style="text-align:center; padding:50px; color:#64748b;">Hozircha Reels videolar mavjud emas.</p>';
             return;
         }
 
-        reelsContainer.innerHTML = ''; 
+        reelsContainer.innerHTML = ''; // Sahifani tozalash
         let allPostsArray = [];
 
-        // Bazadagi ierarxiyani strukturalash
+        // Ma'lumotlarni massivga yig'ish
         Object.keys(rootData).forEach(userId => {
             const userVideos = rootData[userId];
-            
             Object.keys(userVideos).forEach(postId => {
                 const post = userVideos[postId];
                 allPostsArray.push({
                     id: postId,
-                    author_id: userId, // Videoni guruhga yuborgan odam IDsi
-                    username: post.username || "anonim_user",
+                    author_id: userId,
+                    username: post.username || "user",
                     video_url: post.video_url,
                     caption: post.caption || "",
                     likes: post.likes || 0,
-                    likes_list: post.likes_list || {}, // Layk bosganlar ro'yxati
+                    likes_list: post.likes_list || {},
                     timestamp: post.timestamp || 0
                 });
             });
         });
 
-        // Eng yangi qo'shilgan videolarni tepaga saralash
+        // Vaqt bo'yicha saralash (Eng yangisi tepada)
         allPostsArray.sort((a, b) => b.timestamp - a.timestamp);
 
-        // Render HTML
         allPostsArray.forEach(post => {
-            // Avtomatik ijro etish va toza rejim uchun embed sozlamasi
-            const embedUrl = `${post.video_url}&autoplay=1`;
-            const firstLetter = post.username.charAt(0).toUpperCase();
+            // Avtomatik ijro va toza rejim uchun iframe havolasini shakllantirish
+            // Admin paneldan kiritilgan link oxiridagi parmetrlarni to'g'rilaymiz
+            let cleanUrl = post.video_url.split('?')[0];
+            const embedUrl = `${cleanUrl}?embed=1&autoplay=1&muted=1&mode=default`;
 
-            // Ushbu foydalanuvchi ushbu postga layk bosgan yoki bosmaganini aniqlash
+            const firstLetter = post.username.charAt(0).toUpperCase();
             const hasLiked = post.likes_list && post.likes_list[currentUserId] === true;
             const heartClass = hasLiked ? "fa-solid fa-heart liked" : "fa-regular fa-heart";
 
@@ -88,7 +86,7 @@ function loadDexoReels() {
                     </div>
 
                     <div class="reels-sidebar">
-                        <div class="sidebar-icon" data-post-id="${post.id}" data-author-id="${post.author_id}">
+                        <div class="sidebar-icon btn-like" data-post-id="${post.id}" data-author-id="${post.author_id}">
                             <i class="${heartClass}"></i>
                             <span class="like-count">${post.likes}</span>
                         </div>
@@ -102,8 +100,8 @@ function loadDexoReels() {
             reelsContainer.insertAdjacentHTML('beforeend', reelCardHTML);
         });
 
-        // Click hodisalarini sidebar elementlariga bog'lash
-        document.querySelectorAll('.sidebar-icon[data-post-id]').forEach(icon => {
+        // Like tugmalarini hodisaga bog'lash
+        document.querySelectorAll('.btn-like').forEach(icon => {
             icon.addEventListener('click', (e) => {
                 const targetNode = e.currentTarget;
                 const postId = targetNode.getAttribute('data-post-id');
@@ -114,32 +112,24 @@ function loadDexoReels() {
     });
 }
 
-// Global Like/Unlike Tranzaksiya tizimi (Xavfsiz va xatosiz hisoblash uchun)
+// Like/Unlike Tranzaksiya tizimi
 function toggleLikeSystem(authorId, postId) {
-    // Aniq manzil: users_videos / authorId / postId
     const postRef = ref(db, `users_videos/${authorId}/${postId}`);
-
     runTransaction(postRef, (post) => {
         if (post) {
-            if (!post.likes_list) {
-                post.likes_list = {};
-            }
-
+            if (!post.likes_list) post.likes_list = {};
+            
             if (post.likes_list[currentUserId]) {
-                // Agar foydalanuvchi oldin layk bosgan bo'lsa -> Oladi (Unlike)
                 post.likes--;
-                post.likes_list[currentUserId] = null; // Ro'yxatdan o'chirish
+                post.likes_list[currentUserId] = null; // Laykni qaytarib olish
             } else {
-                // Agar birinchi marta bosayotgan bo'lsa -> Qo'shadi (Like)
                 post.likes = (post.likes || 0) + 1;
-                post.likes_list[currentUserId] = true; // Ro'yxatga belgilash
+                post.likes_list[currentUserId] = true; // Yangi layk qo'shish
             }
         }
         return post;
-    }).catch((error) => {
-        console.error("Like amali bajarilmadi:", error);
-    });
+    }).catch((err) => console.error("Xatolik:", err));
 }
 
-// Sahifani ishga tushirish
-loadDexoReels();
+// Tizimni ishga tushirish
+loadDexoGramReels();
