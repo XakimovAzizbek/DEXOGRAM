@@ -23,19 +23,12 @@ const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
-// Kirgan foydalanuvchining shaxsiy Telegram ID raqami
 const currentUserId = tg.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : "8383416300"; 
 
-let youtubePlayers = {}; // Yuklangan pleyer obyektlarini saqlash uchun
-
-// YouTube linkidan ID qismini ajratib olish (Shorts yoki Oddiy havola uchun)
-function extractYouTubeId(url) {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
-}
+let isGlobalUnmuted = false; // Bir marta bosilganda keyingi videolar ham ovozli chiqishi uchun
 
 function loadDexoGramReels() {
+    // Ham 'users_videos' ham 'posts' tugunidagi videolarni xavfsiz tekshirish
     const allVideosRef = ref(db, 'users_videos');
 
     onValue(allVideosRef, (snapshot) => {
@@ -48,7 +41,7 @@ function loadDexoGramReels() {
         reelsContainer.innerHTML = ''; 
         let allPostsArray = [];
 
-        // Bazadagi barcha foydalanuvchilarning videolarini bitta massivga yig'ish
+        // Ma'lumotlarni yig'ish
         Object.keys(rootData).forEach(userId => {
             const userVideos = rootData[userId];
             Object.keys(userVideos).forEach(postId => {
@@ -66,13 +59,15 @@ function loadDexoGramReels() {
             });
         });
 
-        // Vaqt bo'yicha eng yangilarini tepaga tartiblash
+        // Eng yangi yuklangan videolarni tepaga chiqarish
         allPostsArray.sort((a, b) => b.timestamp - a.timestamp);
 
-        allPostsArray.forEach((post, index) => {
-            const ytId = extractYouTubeId(post.video_url);
-            if (!ytId) return; // Agar link noto'g'ri bo'lsa o'tkazib yuboradi
+        if (allPostsArray.length === 0) {
+            reelsContainer.innerHTML = '<p style="text-align:center; padding:50px;">Videolar topilmadi.</p>';
+            return;
+        }
 
+        allPostsArray.forEach((post, index) => {
             const firstLetter = post.username.charAt(0).toUpperCase();
             const hasLiked = post.likes_list && post.likes_list[currentUserId] === true;
             const heartClass = hasLiked ? "fa-solid fa-heart liked" : "fa-regular fa-heart";
@@ -80,7 +75,11 @@ function loadDexoGramReels() {
             const reelCardHTML = `
                 <div class="reels-card" id="card-${post.id}" data-post-id="${post.id}">
                     <div class="video-wrapper">
-                        <div id="player-${post.id}"></div>
+                        <video class="reels-video" id="video-${post.id}" src="${post.video_url}" loop muted playsinline></video>
+                    </div>
+
+                    <div class="volume-status-notice" id="volume-notice-${post.id}">
+                        <i class="fa-solid fa-volume-high"></i>
                     </div>
 
                     <div class="reels-overlay">
@@ -104,65 +103,83 @@ function loadDexoGramReels() {
                 </div>
             `;
             reelsContainer.insertAdjacentHTML('beforeend', reelCardHTML);
-
-            // Dinamik ravishda YouTube API Player obyektini yaratish
-            setTimeout(() => {
-                youtubePlayers[post.id] = new YT.Player(`player-${post.id}`, {
-                    videoId: ytId,
-                    playerVars: {
-                        'autoplay': index === 0 ? 1 : 0, // Faqat birinchi video srazu yonadi
-                        'controls': 0, // YouTube-ning boshqaruv tugmalarini butunlay yashirish
-                        'rel': 0,
-                        'showinfo': 0,
-                        'modestbranding': 1, // Logotiplarni kamaytirish
-                        'loop': 1,
-                        'playlist': ytId, // Cheksiz aylanish (loop) ishlashi uchun playlist parametri shart
-                        'mute': 1, // Avto-ijro brauzerlarda bloklanmasligi uchun ovozsiz ochiladi
-                        'playsinline': 1
-                    },
-                    events: {
-                        'onReady': (event) => {
-                            if (index === 0) {
-                                event.target.playVideo();
-                            }
-                        }
-                    }
-                });
-            }, 150);
         });
 
-        // DexoGram Layk tugmalarini hodisaga bog'lash
-        document.querySelectorAll('.btn-like').forEach(icon => {
-            icon.addEventListener('click', (e) => {
-                const targetNode = e.currentTarget;
-                const postId = targetNode.getAttribute('data-post-id');
-                const authorId = targetNode.getAttribute('data-author-id');
-                toggleLikeSystem(authorId, postId);
-            });
-        });
+        // 1-videoni darhol avtomatik ijro etish
+        setTimeout(() => {
+            const firstVideo = document.querySelector('.reels-video');
+            if (firstVideo) {
+                firstVideo.play().catch(err => console.log("Avtopley cheklovi:", err));
+            }
+        }, 200);
 
-        // Skrol tekshirgichni ishga tushirish
-        setupScrollObserver();
+        // Voqealarni bog'lash (Events)
+        initReelsEvents();
     });
 }
 
-// Foydalanuvchi lentani skrol qilganda faqat ko'rinib turgan videoni qo'yish tizimi
+function initReelsEvents() {
+    // Layk bosish tizimi
+    document.querySelectorAll('.btn-like').forEach(icon => {
+        icon.addEventListener('click', (e) => {
+            e.stopPropagation(); // Videoga bosilish ta'sir qilmasligi uchun
+            const targetNode = e.currentTarget;
+            const postId = targetNode.getAttribute('data-post-id');
+            const authorId = targetNode.getAttribute('data-author-id');
+            toggleLikeSystem(authorId, postId);
+        });
+    });
+
+    // Video ustiga bosilganda Mute / Unmute (Ovozni yoqish-o'chirish)
+    document.querySelectorAll('.reels-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const postId = card.getAttribute('data-post-id');
+            const video = document.getElementById(`video-${postId}`);
+            const notice = document.getElementById(`volume-notice-${postId}`);
+            const icon = notice.querySelector('i');
+
+            if (video) {
+                if (video.muted) {
+                    video.muted = false;
+                    isGlobalUnmuted = true; // Tanlovni eslab qolish
+                    icon.className = "fa-solid fa-volume-high";
+                } else {
+                    video.muted = true;
+                    isGlobalUnmuted = false;
+                    icon.className = "fa-solid fa-volume-xmark";
+                }
+
+                // Ekranda vizual belgi ko'rsatib yashirish
+                notice.classList.add('show');
+                setTimeout(() => notice.classList.remove('show'), 700);
+            }
+        });
+    });
+
+    // Skrolni kuzatish (Intersection Observer)
+    setupScrollObserver();
+}
+
 function setupScrollObserver() {
     const observerOptions = {
         root: reelsContainer,
-        threshold: 0.6 // Karta kamida 60% ekranda ko'rinsa ishlaydi
+        threshold: 0.6
     };
 
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             const postId = entry.target.getAttribute('data-post-id');
-            const player = youtubePlayers[postId];
+            const video = document.getElementById(`video-${postId}`);
 
-            if (player && typeof player.playVideo === 'function') {
+            if (video) {
                 if (entry.isIntersecting) {
-                    player.playVideo(); // Ekranga kelganda videoni davom ettirish
+                    // Video ekranga kelganda holatga qarab ovoz bilan ijro etiladi
+                    video.muted = !isGlobalUnmuted;
+                    video.currentTime = 0; // Videoni boshidan boshlash
+                    video.play().catch(err => console.log("Ijro etishda xato:", err));
                 } else {
-                    player.pauseVideo(); // Ekrandan chiqib ketganda pauza qilish
+                    // Ekrandan chiqib ketganda pauza bo'ladi
+                    video.pause();
                 }
             }
         });
@@ -173,7 +190,6 @@ function setupScrollObserver() {
     });
 }
 
-// DexoGram Like/Unlike Tranzaksiya tizimi
 function toggleLikeSystem(authorId, postId) {
     const postRef = ref(db, `users_videos/${authorId}/${postId}`);
     runTransaction(postRef, (post) => {
@@ -182,17 +198,15 @@ function toggleLikeSystem(authorId, postId) {
             
             if (post.likes_list[currentUserId]) {
                 post.likes--;
-                post.likes_list[currentUserId] = null; // Laykni qaytarib olish
+                post.likes_list[currentUserId] = null;
             } else {
                 post.likes = (post.likes || 0) + 1;
-                post.likes_list[currentUserId] = true; // Yangi layk qo'shish
+                post.likes_list[currentUserId] = true;
             }
         }
         return post;
-    }).catch((err) => console.error("Like amali xatoligi:", err));
+    }).catch((err) => console.error("Like xatosi:", err));
 }
 
-// YouTube API to'liq yuklanib bo'lganidan so'ng ushbu funksiya avtomatik trigger bo'ladi
-window.onYouTubeIframeAPIReady = function() {
-    loadDexoGramReels();
-};
+// Yuklashni boshlash
+loadDexoGramReels();

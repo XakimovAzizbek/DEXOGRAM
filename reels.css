@@ -35,13 +35,13 @@ body {
     scroll-snap-align: start;
     position: relative;
     background-color: #000000;
-    overflow: hidden; /* iFrame chetlarini kesib tashlash uchun shart */
+    overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-/* YouTube pleyerini to'liq ekranga yoyish va aldash */
+/* Video konteyneri */
 .video-wrapper {
     width: 100%;
     height: 100%;
@@ -52,15 +52,14 @@ body {
     justify-content: center;
     align-items: center;
     z-index: 1;
-    pointer-events: none; /* YouTube tugmalari bosilib ketmasligi uchun */
 }
 
-/* YouTube Iframe elementini TikTok formatiga keltirish */
-.video-wrapper iframe, .video-wrapper div {
-    width: 100% !important;
-    height: 100% !important;
-    transform: scale(1.8); /* Keng videoni vertikal ekranga moslab kattalashtirish va chetlarini yashirish */
-    object-fit: cover;
+/* Toza HTML5 video tegi uchun mukammal o'lcham */
+.reels-video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Videoni buzmasdan yoki kesmasdan ekranga to'liq sig'diradi */
+    background-color: #000000;
 }
 
 /* Video ustidagi ma'lumotlar overlay qismi */
@@ -70,7 +69,7 @@ body {
     left: 16px;
     right: 85px;
     z-index: 10;
-    pointer-events: none; /* Matnlar bosishga xalaqit bermasligi uchun */
+    pointer-events: none; /* Kliklarga xalaqit bermaydi */
 }
 
 .reels-user-info {
@@ -110,7 +109,7 @@ body {
     text-overflow: ellipsis;
 }
 
-/* O'ng tomondagi Sidebar (DEXOGRAM shaxsiy tugmalari) */
+/* O'ng tomondagi Sidebar (Tugmalar) */
 .reels-sidebar {
     position: absolute;
     right: 16px;
@@ -127,7 +126,6 @@ body {
     flex-direction: column;
     align-items: center;
     cursor: pointer;
-    pointer-events: auto; /* Elementlar bosilishi uchun */
 }
 
 .sidebar-icon i {
@@ -141,7 +139,7 @@ body {
     transform: scale(1.3);
 }
 
-/* DexoGram Layk bosilgandagi qizil effekt */
+/* Layk bosilgandagi qizil effekt */
 .sidebar-icon i.fa-heart.liked {
     color: #ff2b55 !important;
     animation: hitLike 0.3s ease-in-out;
@@ -159,6 +157,33 @@ body {
     0% { transform: scale(1); }
     50% { transform: scale(1.4); }
     100% { transform: scale(1); }
+}
+
+/* Ovoz indikatori xabari */
+.volume-status-notice {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    background: rgba(0, 0, 0, 0.7);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    z-index: 20;
+    pointer-events: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    opacity: 0;
+}
+.volume-status-notice i {
+    font-size: 24px;
+    color: #ffffff;
+}
+.volume-status-notice.show {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
 }
 
 /* Loader / Spinner */
