@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DexoGram - Create</title>
+    <link rel="stylesheet" href="create.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="back-btn" onclick="window.location.href='home.html'">
+            <i class="fa-solid fa-arrow-left"></i>
+        </div>
+        <div class="page-title">Yangi post yaratish</div>
+        <div style="width: 24px;"></div> </header>
+
+    <main class="create-container">
+        <div class="upload-box" id="uploadBox">
+            <input type="file" id="videoInput" accept="video/*" hidden>
+            <div class="upload-placeholder" id="uploadPlaceholder">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <p>Galereyadan video tanlang</p>
+                <span>Maksimal hajm: 20-30 MB tavsiya etiladi</span>
+            </div>
+            <video id="videoPreview" controls style="display: none; width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px;"></video>
+        </div>
+
+        <div class="caption-section">
+            <textarea id="captionInput" placeholder="Video haqida biror narsa yozing... #reels #trend" rows="4"></textarea>
+        </div>
+
+        <div class="loader-container" id="loaderContainer" style="display: none;">
+            <div class="spinner"></div>
+            <p id="progressText">Video Telegramga yuklanmoqda...</p>
+        </div>
+
+        <button class="share-btn" id="shareBtn" disabled>Ulashish (Share)</button>
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="home.html" class="nav-item">
+            <i class="fa-solid fa-house"></i>
+            <span>Home</span>
+        </a>
+        <a href="search.html" class="nav-item">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span>Search</span>
+        </a>
+        <a href="create.html" class="nav-item active">
+            <i class="fa-regular fa-square-plus"></i>
+            <span>Create</span>
+        </a>
+        <a href="reels.html" class="nav-item">
+            <i class="fa-solid fa-clapperboard"></i>
+            <span>Reels</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+            <i class="fa-regular fa-user"></i>
+            <span>Profile</span>
+        </a>
+    </nav>
+
+    <script type="module" src="create.js"></script>
+</body>
+</html>

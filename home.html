@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DexoGram - Home</title>
+    <link rel="stylesheet" href="home.css">
+    <!-- Telegram Web Apps API -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- FontAwesome ikonkalari uchun -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Yuqori qism (Header) -->
+    <header class="app-header">
+        <div class="logo">DexoGram</div>
+        <div class="header-actions">
+            <i class="fa-regular fa-heart"></i>
+            <i class="fa-regular fa-paper-plane"></i>
+        </div>
+    </header>
+
+    <!-- Asosiy kontent (Feed) -->
+    <main class="feed-container" id="feedContainer">
+        <!-- Postlar Firebase orqali JS yordamida shu yerga yuklanadi -->
+        <!-- Namuna uchun bitta post: -->
+        <div class="post-card">
+            <div class="post-header">
+                <img src="https://via.placeholder.com/40" alt="Avatar" class="user-avatar">
+                <span class="username">user_active</span>
+            </div>
+            <div class="post-media">
+                <!-- Agar video bo'lsa video tegi, rasm bo'lsa img tegi qo'yiladi -->
+                <video src="https://www.w3schools.com/html/mov_bbb.mp4" controls loop muted></video>
+            </div>
+            <div class="post-actions">
+                <div class="left-actions">
+                    <i class="fa-regular fa-heart action-btn" onclick="toggleLike(this)"></i>
+                    <i class="fa-regular fa-comment action-btn"></i>
+                    <i class="fa-regular fa-paper-plane action-btn"></i>
+                </div>
+                <i class="fa-regular fa-bookmark action-btn"></i>
+            </div>
+            <div class="post-info">
+                <p class="likes-count">1,245 likes</p>
+                <p class="post-caption"><strong>user_active</strong> Telegram Mini App ichida ajoyib loyiha! 🚀 #firebase #tma</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Pastki Navigatsiya (Bottom Navbar) -->
+    <nav class="bottom-nav">
+        <a href="home.html" class="nav-item active">
+            <i class="fa-solid fa-house"></i>
+            <span>Home</span>
+        </a>
+        <a href="search.html" class="nav-item">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span>Search</span>
+        </a>
+        <a href="create.html" class="nav-item">
+            <i class="fa-regular fa-square-plus"></i>
+            <span>Create</span>
+        </a>
+        <a href="reels.html" class="nav-item">
+            <i class="fa-solid fa-clapperboard"></i>
+            <span>Reels</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+            <i class="fa-regular fa-user"></i>
+            <span>Profile</span>
+        </a>
+    </nav>
+
+    <script href="home.js"></script>
+</body>
+</html>

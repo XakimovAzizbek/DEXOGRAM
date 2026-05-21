@@ -1,0 +1,170 @@
+/* Umumiy sozlamalar */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    background-color: var(--tg-theme-bg-color, #ffffff);
+    color: var(--tg-theme-text-color, #262626);
+    padding-top: 60px;
+    padding-bottom: 70px;
+    overflow-x: hidden;
+}
+
+/* Yuqori Header */
+.app-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background-color: var(--tg-theme-bg-color, #ffffff);
+    border-bottom: 1px solid var(--tg-theme-hint-color, #dbdbdb);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px;
+    z-index: 1000;
+}
+
+.app-header .logo {
+    font-size: 22px;
+    font-weight: bold;
+    font-style: italic;
+    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.header-actions i {
+    font-size: 22px;
+    margin-left: 18px;
+    cursor: pointer;
+    color: var(--tg-theme-text-color, #262626);
+}
+
+/* Postlar Lentasi (Feed) */
+.feed-container {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.post-card {
+    background-color: var(--tg-theme-bg-color, #ffffff);
+    border-bottom: 1px solid var(--tg-theme-hint-color, #f0f0f0);
+    margin-bottom: 15px;
+}
+
+.post-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+}
+
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    margin-right: 10px;
+    object-fit: cover;
+    border: 1.5px solid #cc2366;
+}
+
+.username {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.post-media video, .post-media img {
+    width: 100%;
+    max-height: 450px;
+    object-fit: cover;
+    background-color: #000;
+}
+
+.post-actions {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 16px;
+}
+
+.left-actions .action-btn {
+    margin-right: 16px;
+}
+
+.action-btn {
+    font-size: 22px;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+.action-btn:active {
+    transform: scale(1.2);
+}
+
+.fa-heart.liked {
+    color: #ed4956;
+    animation: pulse 0.3s linear;
+}
+
+.post-info {
+    padding: 0 16px 16px 16px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.likes-count {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+/* Pastki Navigatsiya (Bottom Navbar) */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background-color: var(--tg-theme-secondary-bg-color, #ffffff);
+    border-top: 1px solid var(--tg-theme-hint-color, #dbdbdb);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+    padding-bottom: env(safe-area-inset-bottom); /* iOS qurilmalari uchun xavfsiz hudud */
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: var(--tg-theme-hint-color, #8e8e8e);
+    width: 20%;
+    transition: color 0.2s;
+}
+
+.nav-item i {
+    font-size: 20px;
+    margin-bottom: 2px;
+}
+
+.nav-item span {
+    font-size: 10px;
+}
+
+/* Aktiv menyu holati */
+.nav-item.active {
+    color: var(--tg-theme-button-color, #0098ea); /* Telegram asosiy ko'k rangi yoki qora */
+}
+
+/* Animatsiya */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
