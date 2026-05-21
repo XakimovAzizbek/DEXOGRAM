@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-// 1. Sizning Firebase konfiguratsiyangiz
+// Firebase Konfiguratsiyasi
 const firebaseConfig = {
   apiKey: "AIzaSyApRt8MNq4YvsjxQVhyQK3p5km8G7Hi9iE",
   authDomain: "webtelegram-9a1d6.firebaseapp.com",
@@ -19,148 +19,101 @@ const db = getDatabase(app);
 // Telegram Web App sozlamalari
 const tg = window.Telegram.WebApp;
 tg.ready();
+tg.expand();
 
-// --- TELEGRAM BOT VA KANAL MA'LUMOTLARI ---
-const BOT_TOKEN = "8785312159:AAGDR76v_ASLoFFZDxU32YejHyAXj5tIi1M"; // O'zingizning bot tokeningizni yozing
-const CHANNEL_ID = "-1003825803639"; // O'zingizning maxfiy kanalingiz ID-sini yozing (Format: -100...)
-// ------------------------------------------
-
-const uploadBox = document.getElementById('uploadBox');
-const videoInput = document.getElementById('videoInput');
-const uploadPlaceholder = document.getElementById('uploadPlaceholder');
-const videoPreview = document.getElementById('videoPreview');
+// DOM Elementlarini olish
+const youtubeLinkInput = document.getElementById('youtubeLinkInput');
+const linkError = document.getElementById('linkError');
+const previewSection = document.getElementById('previewSection');
+const youtubePreviewFrame = document.getElementById('youtubePreviewFrame');
 const captionInput = document.getElementById('captionInput');
 const shareBtn = document.getElementById('shareBtn');
 const loaderContainer = document.getElementById('loaderContainer');
-const progressText = document.getElementById('progressText');
 
-let selectedFile = null;
+// Foydalanuvchi ma'lumotlari (Telegram xavfsiz muhitidan olinadi)
+const username = tg.initDataUnsafe?.user?.username || "anonim_user";
+const currentUserId = tg.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : "8383416300"; 
 
-// Oynani bossa, galereyani ochish
-uploadBox.addEventListener('click', () => videoInput.click());
+// Istalgan ko'rinishdagi YouTube linkidan 11 xonali ID-ni qirqib olish RegEx funksiyasi
+function extractYouTubeId(url) {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+}
 
-// Video tanlanganda ishlaydigan funksiya
-videoInput.addEventListener('change', (e) => {
-    selectedFile = e.target.files[0];
-    if (selectedFile) {
-        // Tanlangan video formatini tekshirish
-        if (!selectedFile.type.startsWith('video/')) {
-            alert('Iltimos, faqat video fayl tanlang!');
-            return;
-        }
+// Foydalanuvchi havolani yozayotgan (yoki joylashtirgan) paytda tekshirish
+youtubeLinkInput.addEventListener('input', () => {
+    const inputValue = youtubeLinkInput.value.trim();
+    
+    if (inputValue === "") {
+        linkError.style.display = 'none';
+        previewSection.style.display = 'none';
+        shareBtn.disabled = true;
+        return;
+    }
 
-        // Preview ko'rsatish
-        const fileURL = URL.createObjectURL(selectedFile);
-        videoPreview.src = fileURL;
-        videoPreview.style.display = 'block';
-        uploadPlaceholder.style.display = 'none';
+    const videoId = extractYouTubeId(inputValue);
+
+    if (videoId) {
+        // Havola To'g'ri bo'lsa
+        linkError.style.display = 'none';
         
-        // Ulashish tugmasini faollashtirish
+        // Preview qismida pleyerga solib ko'rsatamiz
+        youtubePreviewFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=0`;
+        previewSection.style.display = 'block';
+        
+        // Ulashish tugmasini aktivlashtiramiz
         shareBtn.disabled = false;
+    } else {
+        // Havola Noto'g'ri bo'lsa qizil ogohlantirishni chiqarish
+        linkError.style.display = 'block';
+        previewSection.style.display = 'none';
+        youtubePreviewFrame.src = "";
+        shareBtn.disabled = true;
     }
 });
 
-// "Ulashish" tugmasi bosilganda
-shareBtn.addEventListener('click', () => {
-    if (!selectedFile) return;
+// Ulashish tugmasi bosilganda ma'lumotlarni Firebase Realtime Database-ga yozish
+shareBtn.addEventListener('click', async () => {
+    const videoUrl = youtubeLinkInput.value.trim();
+    const caption = captionInput.value.trim();
+    const videoId = extractYouTubeId(videoUrl);
 
-    // Tugma va oynani bloklash, yuklash rejimini yoqish
+    if (!videoId) {
+        alert("Iltimos, avval to'g'ri YouTube havolasini kiriting!");
+        return;
+    }
+
+    // Yuklanish holatini yoqish
     shareBtn.disabled = true;
     loaderContainer.style.display = 'block';
-    progressText.innerText = "Yuklash boshlanmoqda: 0%";
 
-    // Telegram foydalanuvchi ma'lumotlarini olish
-    const username = tg.initDataUnsafe?.user?.username || "anonim_user";
-    const caption = captionInput.value;
+    try {
+        // Sizning reels.js sahifangiz ma'lumotlarni aynan 'users_videos/foydalanuvchi_id/random_post_id' joyidan o'qiydi
+        // Shuning uchun arxitekturani aynan shu tuzilmaga moslaymiz:
+        const userVideosRef = ref(db, `users_videos/${currentUserId}`);
+        const newPostRef = push(userVideosRef); // Yangi unikal ID yaratadi
 
-    // 1-QADAM: Videoni Telegram Bot orqali maxfiy kanalga yuborish (XHR orqali progress kuzatiladi)
-    const formData = new FormData();
-    formData.append('chat_id', CHANNEL_ID);
-    formData.append('video', selectedFile);
+        await set(newPostRef, {
+            username: username,
+            video_url: videoUrl, // Kiritilgan original havola
+            caption: caption,
+            likes: 0,
+            likes_list: {},
+            timestamp: Date.now()
+        });
 
-    const xhr = new XMLHttpRequest();
+        alert("Reels muvaffaqiyatli ulashildi! 🚀");
+        
+        // Tizimni muvaffaqiyatli yakunlab Reels sahifasiga yo'naltiramiz
+        window.location.href = "reels.html";
 
-    // Real vaqt rejimida yuklanish foizini hisoblash
-    xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-            const percentComplete = Math.round((e.loaded / e.total) * 100);
-            progressText.innerText = `Telegramga yuklanmoqda: ${percentComplete}%`;
-        }
-    });
-
-    // Yuklanish muvaffaqiyatli tugaganda ishlaydigan qism
-    xhr.addEventListener('load', async () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-            try {
-                const result = JSON.parse(xhr.responseText);
-
-                if (result.ok) {
-                    // Telegram videoni qabul qildi va bizga ma'lumot qaytardi
-                    const videoData = result.result.video;
-                    const fileId = videoData.file_id; // Telegram ichidagi maxfiy ID
-                    
-                    progressText.innerText = "Fayl yo'li aniqlanmoqda...";
-                    
-                    // Telegram bot orqali fayl yuklanganda to'g'ridan-to'g'ri link olish uchun:
-                    const fileResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`);
-                    const fileJson = await fileResponse.json();
-                    
-                    let finalVideoUrl = "";
-                    if(fileJson.ok) {
-                        const filePath = fileJson.result.file_path;
-                        // Bu link orqali HTML5 <video> tegi videoni to'g'ridan-to'g'ri o'qiy oladi va avtomatik ijro eta oladi (Reelsda)
-                        finalVideoUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
-                    } else {
-                        // Agar muammo bo'lsa, tma o'zi o'qiydigan umumiy bot havolasi (buni keyin sozlash mumkin)
-                        finalVideoUrl = `https://t.me/c/${CHANNEL_ID.replace('-100', '')}/${result.result.message_id}`;
-                    }
-
-                    progressText.innerText = "Firebase bazasiga yozilmoqda...";
-
-                    // 2-QADAM: Ma'lumotlarni Firebase Realtime Database-ga yozish
-                    const postsRef = ref(db, 'posts');
-                    const newPostRef = push(postsRef); // Avtomatik random ID yaratadi
-                    
-                    await set(newPostRef, {
-                        username: username,
-                        video_url: finalVideoUrl,
-                        caption: caption,
-                        likes: 0,
-                        views: 0,
-                        timestamp: Date.now()
-                    });
-
-                    alert("Post muvaffaqiyatli ulashildi! 🚀");
-                    // Bosh sahifaga qaytarish
-                    window.location.href = "home.html";
-
-                } else {
-                    alert("Telegramga yuklashda xatolik: " + result.description);
-                    resetUploadState();
-                }
-            } catch (err) {
-                alert("Javobni qayta ishlashda xatolik yuz berdi.");
-                resetUploadState();
-            }
-        } else {
-            alert("Telegram serveri xatolik qaytardi: " + xhr.statusText);
-            resetUploadState();
-        }
-    });
-
-    // Tarmoq xatoligi yuz berganda
-    xhr.addEventListener('error', () => {
-        alert("Tarmoqda xatolik yuz berdi!");
-        resetUploadState();
-    });
-
-    // So'rovni yuborish
-    xhr.open('POST', `https://api.telegram.org/bot${BOT_TOKEN}/sendVideo`);
-    xhr.send(formData);
+    } catch (error) {
+        console.error("Firebase database xatoligi:", error);
+        alert("Baza bilan bog'lanishda xatolik yuz berdi. Qayta urinib ko'ring!");
+        
+        // Xatolik bo'lsa yuklashni to'xtatish
+        shareBtn.disabled = false;
+        loaderContainer.style.display = 'none';
+    }
 });
-
-// Xatolik bo'lganda yuklash holatini qayta tiklash funksiyasi
-function resetUploadState() {
-    shareBtn.disabled = false;
-    loaderContainer.style.display = 'none';
-}

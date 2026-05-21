@@ -2,42 +2,49 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>DexoGram - Create</title>
     <link rel="stylesheet" href="create.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></head>
 <body>
 
     <header class="app-header">
         <div class="back-btn" onclick="window.location.href='home.html'">
             <i class="fa-solid fa-arrow-left"></i>
         </div>
-        <div class="page-title">Yangi post yaratish</div>
-        <div style="width: 24px;"></div> </header>
+        <div class="page-title">Yangi Reels ulashish</div>
+        <div style="width: 24px;"></div> 
+    </header>
 
     <main class="create-container">
-        <div class="upload-box" id="uploadBox">
-            <input type="file" id="videoInput" accept="video/*" hidden>
-            <div class="upload-placeholder" id="uploadPlaceholder">
-                <i class="fa-solid fa-cloud-arrow-up"></i>
-                <p>Galereyadan video tanlang</p>
-                <span>Maksimal hajm: 20-30 MB tavsiya etiladi</span>
+        
+        <div class="input-section">
+            <label for="youtubeLinkInput" class="section-label">
+                <i class="fa-brands fa-youtube" style="color: #ff0000;"></i> YouTube Video yoki Shorts Havolasi:
+            </label>
+            <input type="text" id="youtubeLinkInput" placeholder="https://youtube.com/shorts/... yoki https://youtu.be/..." autocomplete="off">
+            <p class="error-message" id="linkError">Havola xato! Iltimos, to'g'ri YouTube havolasini kiriting.</p>
+        </div>
+
+        <div class="preview-section" id="previewSection" style="display: none;">
+            <p class="section-label"><i class="fa-solid fa-eye"></i> Oldindan ko'rish:</p>
+            <div class="video-preview-wrapper">
+                <iframe id="youtubePreviewFrame" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
             </div>
-            <video id="videoPreview" controls style="display: none; width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px;"></video>
         </div>
 
         <div class="caption-section">
-            <textarea id="captionInput" placeholder="Video haqida biror narsa yozing... #reels #trend" rows="4"></textarea>
+            <label for="captionInput" class="section-label"><i class="fa-solid fa-pen-nib"></i> Video tavsifi (Caption):</label>
+            <textarea id="captionInput" placeholder="Video haqida biror narsa yozing... #dexogram #reels #trend" rows="4"></textarea>
         </div>
 
         <div class="loader-container" id="loaderContainer" style="display: none;">
             <div class="spinner"></div>
-            <p id="progressText">Video Telegramga yuklanmoqda...</p>
+            <p id="progressText">Ma'lumotlar Firebase-ga yozilmoqda...</p>
         </div>
 
-        <button class="share-btn" id="shareBtn" disabled>Ulashish (Share)</button>
+        <button class="share-btn" id="shareBtn" disabled>Postni ulashish (Share)</button>
     </main>
 
     <nav class="bottom-nav">

@@ -23,8 +23,17 @@ const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
-// Kirgan foydalanuvchining haqiqiy Telegram ID raqami
+// Kirgan foydalanuvchining shaxsiy Telegram ID raqami
 const currentUserId = tg.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : "8383416300"; 
+
+let youtubePlayers = {}; // Yuklangan pleyer obyektlarini saqlash uchun
+
+// YouTube linkidan ID qismini ajratib olish (Shorts yoki Oddiy havola uchun)
+function extractYouTubeId(url) {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+}
 
 function loadDexoGramReels() {
     const allVideosRef = ref(db, 'users_videos');
@@ -32,14 +41,14 @@ function loadDexoGramReels() {
     onValue(allVideosRef, (snapshot) => {
         const rootData = snapshot.val();
         if (!rootData) {
-            reelsContainer.innerHTML = '<p style="text-align:center; padding:50px; color:#64748b;">Hozircha Reels videolar mavjud emas.</p>';
+            reelsContainer.innerHTML = '<p style="text-align:center; padding:50px;">Hozircha videolar yo‘q.</p>';
             return;
         }
 
-        reelsContainer.innerHTML = ''; // Sahifani tozalash
+        reelsContainer.innerHTML = ''; 
         let allPostsArray = [];
 
-        // Ma'lumotlarni massivga yig'ish
+        // Bazadagi barcha foydalanuvchilarning videolarini bitta massivga yig'ish
         Object.keys(rootData).forEach(userId => {
             const userVideos = rootData[userId];
             Object.keys(userVideos).forEach(postId => {
@@ -57,30 +66,27 @@ function loadDexoGramReels() {
             });
         });
 
-        // Vaqt bo'yicha saralash (Eng yangisi tepada)
+        // Vaqt bo'yicha eng yangilarini tepaga tartiblash
         allPostsArray.sort((a, b) => b.timestamp - a.timestamp);
 
-        allPostsArray.forEach(post => {
-            // Avtomatik ijro va toza rejim uchun iframe havolasini shakllantirish
-            // Admin paneldan kiritilgan link oxiridagi parmetrlarni to'g'rilaymiz
-            let cleanUrl = post.video_url.split('?')[0];
-            const embedUrl = `${cleanUrl}?embed=1&autoplay=1&muted=1&mode=default`;
+        allPostsArray.forEach((post, index) => {
+            const ytId = extractYouTubeId(post.video_url);
+            if (!ytId) return; // Agar link noto'g'ri bo'lsa o'tkazib yuboradi
 
             const firstLetter = post.username.charAt(0).toUpperCase();
             const hasLiked = post.likes_list && post.likes_list[currentUserId] === true;
             const heartClass = hasLiked ? "fa-solid fa-heart liked" : "fa-regular fa-heart";
 
             const reelCardHTML = `
-                <div class="reels-card" id="reel-${post.id}">
+                <div class="reels-card" id="card-${post.id}" data-post-id="${post.id}">
                     <div class="video-wrapper">
-                        <iframe src="${embedUrl}" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                        <div id="player-${post.id}"></div>
                     </div>
 
                     <div class="reels-overlay">
                         <div class="reels-user-info">
                             <div class="reels-avatar">${firstLetter}</div>
                             <span class="reels-username">@${post.username}</span>
-                            <span class="reels-user-id"><i class="fa-solid fa-fingerprint"></i> ID: ${post.author_id}</span>
                         </div>
                         <p class="reels-caption">${post.caption}</p>
                     </div>
@@ -98,9 +104,34 @@ function loadDexoGramReels() {
                 </div>
             `;
             reelsContainer.insertAdjacentHTML('beforeend', reelCardHTML);
+
+            // Dinamik ravishda YouTube API Player obyektini yaratish
+            setTimeout(() => {
+                youtubePlayers[post.id] = new YT.Player(`player-${post.id}`, {
+                    videoId: ytId,
+                    playerVars: {
+                        'autoplay': index === 0 ? 1 : 0, // Faqat birinchi video srazu yonadi
+                        'controls': 0, // YouTube-ning boshqaruv tugmalarini butunlay yashirish
+                        'rel': 0,
+                        'showinfo': 0,
+                        'modestbranding': 1, // Logotiplarni kamaytirish
+                        'loop': 1,
+                        'playlist': ytId, // Cheksiz aylanish (loop) ishlashi uchun playlist parametri shart
+                        'mute': 1, // Avto-ijro brauzerlarda bloklanmasligi uchun ovozsiz ochiladi
+                        'playsinline': 1
+                    },
+                    events: {
+                        'onReady': (event) => {
+                            if (index === 0) {
+                                event.target.playVideo();
+                            }
+                        }
+                    }
+                });
+            }, 150);
         });
 
-        // Like tugmalarini hodisaga bog'lash
+        // DexoGram Layk tugmalarini hodisaga bog'lash
         document.querySelectorAll('.btn-like').forEach(icon => {
             icon.addEventListener('click', (e) => {
                 const targetNode = e.currentTarget;
@@ -109,10 +140,40 @@ function loadDexoGramReels() {
                 toggleLikeSystem(authorId, postId);
             });
         });
+
+        // Skrol tekshirgichni ishga tushirish
+        setupScrollObserver();
     });
 }
 
-// Like/Unlike Tranzaksiya tizimi
+// Foydalanuvchi lentani skrol qilganda faqat ko'rinib turgan videoni qo'yish tizimi
+function setupScrollObserver() {
+    const observerOptions = {
+        root: reelsContainer,
+        threshold: 0.6 // Karta kamida 60% ekranda ko'rinsa ishlaydi
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const postId = entry.target.getAttribute('data-post-id');
+            const player = youtubePlayers[postId];
+
+            if (player && typeof player.playVideo === 'function') {
+                if (entry.isIntersecting) {
+                    player.playVideo(); // Ekranga kelganda videoni davom ettirish
+                } else {
+                    player.pauseVideo(); // Ekrandan chiqib ketganda pauza qilish
+                }
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.reels-card').forEach(card => {
+        observer.observe(card);
+    });
+}
+
+// DexoGram Like/Unlike Tranzaksiya tizimi
 function toggleLikeSystem(authorId, postId) {
     const postRef = ref(db, `users_videos/${authorId}/${postId}`);
     runTransaction(postRef, (post) => {
@@ -128,8 +189,10 @@ function toggleLikeSystem(authorId, postId) {
             }
         }
         return post;
-    }).catch((err) => console.error("Xatolik:", err));
+    }).catch((err) => console.error("Like amali xatoligi:", err));
 }
 
-// Tizimni ishga tushirish
-loadDexoGramReels();
+// YouTube API to'liq yuklanib bo'lganidan so'ng ushbu funksiya avtomatik trigger bo'ladi
+window.onYouTubeIframeAPIReady = function() {
+    loadDexoGramReels();
+};
