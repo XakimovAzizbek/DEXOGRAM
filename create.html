@@ -6,7 +6,8 @@
     <title>DexoGram - Create</title>
     <link rel="stylesheet" href="create.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
 <body>
 
     <header class="app-header">
@@ -18,14 +19,15 @@
     </header>
 
     <main class="create-container">
+        <input type="file" id="videoInput" accept="video/mp4,video/x-m4v,video/quicktime,video/*" style="display: none;">
+
         <div class="upload-box" id="uploadBox">
-            <input type="file" id="videoInput" accept="video/*" hidden>
             <div class="upload-placeholder" id="uploadPlaceholder">
                 <i class="fa-solid fa-cloud-arrow-up"></i>
-                <p>Galereyadan video tanlang</p>
-                <span>Maksimal hajm: 20-30 MB tavsiya etiladi</span>
+                <p>Galereya yoki Fayllardan tanlang</p>
+                <span>Faqat video fayllar yuklanadi (Max: 50 MB)</span>
             </div>
-            <video id="videoPreview" style="display: none; width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px;" controls></video>
+            <video id="videoPreview" style="display: none; width: 100%; height: 100%; object-fit: contain; border-radius: 8px; background-color: #000000;" controls playsinline></video>
         </div>
 
         <div class="caption-section">

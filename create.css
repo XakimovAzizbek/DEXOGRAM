@@ -51,7 +51,7 @@ body {
 /* Upload Box */
 .upload-box {
     width: 100%;
-    height: 220px;
+    height: 250px;
     border: 2px dashed var(--tg-theme-hint-color, #dbdbdb);
     border-radius: 12px;
     display: flex;
@@ -167,7 +167,7 @@ body {
     flex-direction: column;
     align-items: center;
     text-decoration: none;
-    color: var(--tg-theme-hint-color, #8e8e8e);
+    color: #8e8e8e;
     font-size: 10px;
     gap: 4px;
 }
