@@ -22,7 +22,7 @@ tg.ready();
 
 // --- TELEGRAM BOT VA KANAL MA'LUMOTLARI ---
 const BOT_TOKEN = "8785312159:AAGDR76v_ASLoFFZDxU32YejHyAXj5tIi1M"; // O'zingizning bot tokeningizni yozing
-const CHANNEL_ID = "-3825803639"; // O'zingizning maxfiy kanalingiz ID-sini yozing (Format: -100...)
+const CHANNEL_ID = "-1003825803639"; // O'zingizning maxfiy kanalingiz ID-sini yozing (Format: -100...)
 // ------------------------------------------
 
 const uploadBox = document.getElementById('uploadBox');
