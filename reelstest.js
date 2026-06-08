@@ -31,13 +31,14 @@ const commentInput = document.getElementById("commentInput");
 const sendCommentBtn = document.getElementById("sendCommentBtn");
 
 let activeCommentPostId = null;
-let globalMuted = true; 
+let globalMuted = true; // Sukut bo'yicha videolar ovozsiz boshlanadi
 
-// Reklama uchun o'zgaruvchilar
+// REKLAMA MANTIQI UCHUN O'ZGARUVCHILAR
 let userViewCount = 0; 
-const AD_INTERVAL = 9; // Har 9 ta postdan keyin reklama chiqadi
+const AD_TRIGGER_COUNT = 9; // Jami 9 ta post ko'rilganda keyingisi reklama bo'ladi
+let adInserted = false;
 
-// Foydalanuvchining Firebase'dagi ko'rishlar sonini yuklab olish
+// Firebase'dan foydalanuvchining ko'rishlar sonini yuklash
 async function loadUserViewCount() {
     const userRef = ref(db, `users/${user.id}/viewCount`);
     try {
@@ -56,20 +57,18 @@ async function loadUserViewCount() {
 const postsRef = ref(db, 'posts');
 
 async function initReels() {
-    await loadUserViewCount(); // Birinchi bo'lib eski hisoblagichni tiklaymiz
+    await loadUserViewCount(); // Birinchi bo'lib Firebase'dan hisoblagichni o'qiymiz
+    adInserted = false; // Har safar sahifa yangilanganda qayta tiklanadi
 
     onValue(postsRef, (snapshot) => {
         reelsContainer.innerHTML = "";
         const data = snapshot.val();
         if (!data) return;
 
+        // Postlarni eng yangisini tepaga saralash
         const postsArray = Object.entries(data).reverse();
-        let postCounter = 0;
 
         postsArray.forEach(([postId, post]) => {
-            postCounter++;
-
-            // Oddiy Reels Post yaratish
             const likesObj = post.likes_users || {};
             const likesCount = Object.keys(likesObj).length;
             const isLiked = likesObj[user.id] ? "liked" : "";
@@ -79,11 +78,14 @@ async function initReels() {
             const reelHTML = `
                 <div class="reel-post real-video-post" id="post_${postId}" data-post-id="${postId}">
                     <video src="${post.video_url}" class="reel-video" loop playsinline webkit-playsinline muted></video>
+                    
                     <div class="audio-status-icon">🔊</div>
+
                     <div class="reel-overlay-left">
                         <div class="reel-user-id">👤 ID: ${post.userId}</div>
                         <div class="reel-caption">${post.caption || ''}</div>
                     </div>
+
                     <div class="reel-overlay-right">
                         <button class="action-btn ${isLiked}" id="likeBtn_${postId}">
                             <span class="icon">${likeIcon}</span>
@@ -102,32 +104,41 @@ async function initReels() {
             `;
             reelsContainer.insertAdjacentHTML('beforeend', reelHTML);
             setupVideoControls(postId);
-
-            // KRITIK QISM: Har 9-chi postdan keyin sun'iy Adsgram reklama kartasini joylashtiramiz
-            if (postCounter % AD_INTERVAL === 0) {
-                const adHTML = `
-                    <div class="reel-post ad-post" id="ad_post_${postCounter}">
-                        <iframe src="ads.html" class="ad-iframe" style="width:100%; height:100%; border:none;"></iframe>
-                        <div class="reel-overlay-left" style="bottom: 80px;">
-                            <div class="reel-caption" style="background:rgba(0,0,0,0.6); padding:5px 10px; border-radius:5px;">
-                                📢 Homiylik reklamsi (Adsgram)
-                            </div>
-                        </div>
-                    </div>
-                `;
-                reelsContainer.insertAdjacentHTML('beforeend', adHTML);
-            }
         });
+
+        // AGAR FOYDALANUVCHI ALLAQACHON 9 TA POST KO'RGAN BO'LSA (Yoki kirib-chiqib jami 9 taga yetgan bo'lsa)
+        // Ro'yxat oxiriga (4-postdan keyin) scroll qilsa bo'ladigan reklama postini darhol qo'shamiz
+        if (userViewCount >= AD_TRIGGER_COUNT) {
+            insertAdCard();
+        }
 
         handleIntersectionObserver();
     });
 }
 
-// 4. Video boshqaruv datchiklari
+// Reklama postini dinamik qo'shish funksiyasi
+function insertAdCard() {
+    if (adInserted) return; // Ikki marta qo'shilib ketishining oldini olish
+    
+    const adHTML = `
+        <div class="reel-post ad-post" id="adsgram_post">
+            <iframe src="ads.html" class="ad-iframe" style="width:100%; height:100%; border:none;"></iframe>
+            <div class="reel-overlay-left" style="bottom: 80px; z-index: 999;">
+                <div class="reel-caption" style="background:rgba(0,0,0,0.7); padding:8px 12px; border-radius:8px; font-weight:bold; color:#00ffff;">
+                    📢 Homiylik reklamsi (Adsgram)
+                </div>
+            </div>
+        </div>
+    `;
+    reelsContainer.insertAdjacentHTML('beforeend', adHTML);
+    adInserted = true;
+}
+
+// 4. Video boshqaruv datchiklari (O'zgarishsiz qoldi)
 function setupVideoControls(postId) {
     const postEl = document.getElementById(`post_${postId}`);
     if (!postEl) return;
-    
+
     const video = postEl.querySelector('.reel-video');
     const audioIcon = postEl.querySelector('.audio-status-icon');
     const likeBtn = document.getElementById(`likeBtn_${postId}`);
@@ -136,17 +147,20 @@ function setupVideoControls(postId) {
 
     let pressTimer;
 
-    video.addEventListener('pointerdown', () => {
-        pressTimer = setTimeout(() => { video.pause(); }, 300);
+    video.addEventListener('pointerdown', (e) => {
+        pressTimer = setTimeout(() => {
+            video.pause();
+        }, 300);
     });
 
-    video.addEventListener('pointerup', () => {
+    video.addEventListener('pointerup', (e) => {
         clearTimeout(pressTimer);
         if (video.paused) {
             video.play();
         } else {
             globalMuted = !globalMuted;
             document.querySelectorAll('.reel-video').forEach(v => v.muted = globalMuted);
+            
             audioIcon.innerText = globalMuted ? "🔇" : "🔊";
             audioIcon.style.opacity = "1";
             setTimeout(() => audioIcon.style.opacity = "0", 600);
@@ -173,20 +187,21 @@ function setupVideoControls(postId) {
     });
 }
 
-// 5. Sharhlar bilan ishlash (O'zgarishsiz qoldi)
+// 5. Sharhlarni Firebase'dan yuklash (O'zgarishsiz qoldi)
 function loadComments(postId) {
     const commentsRef = ref(db, `posts/${postId}/comments`);
     onValue(commentsRef, (snapshot) => {
         commentsList.innerHTML = "";
         const data = snapshot.val();
         if (!data) {
-            commentsList.innerHTML = `<div style="text-align:center;color:#8e8e8e;margin-top:20px;">Hali sharhlar yo'q.</div>`;
+            commentsList.innerHTML = `<div style="text-align:center;color:#8e8e8e;margin-top:20px;">Hali sharhlar yo'q. Birinchi bo'ling!</div>`;
             return;
         }
+
         Object.values(data).forEach(comment => {
             const commentHTML = `
                 <div class="comment-item">
-                    <img src="https://ui-avatars.com/api/?name=${comment.userId}&background=random&color=fff" class="comment-avatar">
+                    <img src="https://ui-avatars.com/api/?name=${comment.userId}&background=random&color=fff" class="comment-avatar" alt="avatar">
                     <div class="comment-details">
                         <span class="comment-user">ID: ${comment.userId}</span>
                         <span class="comment-text">${comment.text}</span>
@@ -202,22 +217,29 @@ function loadComments(postId) {
 sendCommentBtn.addEventListener('click', async () => {
     const text = commentInput.value.trim();
     if (!text || !activeCommentPostId) return;
+
     const postCommentRef = ref(db, `posts/${activeCommentPostId}/comments`);
     const newCommentRef = push(postCommentRef);
-    await set(newCommentRef, { userId: user.id, text: text, timestamp: Date.now() });
+
+    await set(newCommentRef, {
+        userId: user.id,
+        text: text,
+        timestamp: Date.now()
+    });
+
     commentInput.value = "";
 });
 
 closeCommentBtn.addEventListener('click', () => commentModal.hidden = true);
 modalBackdrop.addEventListener('click', () => commentModal.hidden = true);
 
-// 6. AVTOMATIK IJRO VA REKLAMA HISOBLAGICHI
+// 6. AVTOMATIK IJRO VA REKLAMA HISOBLASH TIZIMI (To'g'rilangan qism)
 function handleIntersectionObserver() {
     let lastViewedPostId = null;
 
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(async (entry) => {
-            // Agar bu haqiqiy video post bo'lsa
+            // Agar ko'rinayotgan element haqiqiy video post bo'lsa
             if (entry.target.classList.contains('real-video-post')) {
                 const video = entry.target.querySelector('.reel-video');
                 const currentPostId = entry.target.getAttribute('data-post-id');
@@ -226,39 +248,49 @@ function handleIntersectionObserver() {
                     video.muted = globalMuted;
                     video.play().catch(err => console.log("Avto-ijro bloklandi"));
 
-                    // Foydalanuvchi yangi postga o'tsa hisoblagichni oshiramiz
+                    // Faqat yangi postga scroll qilingandagina hisoblaymiz
                     if (lastViewedPostId !== currentPostId) {
                         lastViewedPostId = currentPostId;
                         userViewCount++;
 
-                        // Agar hisoblagich 10 ga yetsa, reklama ko'rsatilgan deb hisoblab nollaymiz (yoki moduloga qarab ketadi)
-                        if (userViewCount > AD_INTERVAL) {
-                            userViewCount = 1; // Reklamadan keyingi birinchi post
-                        }
-
-                        // Firebase-ga ko'rishlar sonini saqlash
+                        // Firebase-ga yangilangan ko'rishlar sonini yuboramiz
                         await update(ref(db, `users/${user.id}`), {
                             viewCount: userViewCount
                         });
+
+                        // Agar hisoblagich 9 taga yetgan bo'lsa, darhol pastga reklama kartasini joylaymiz
+                        if (userViewCount >= AD_TRIGGER_COUNT) {
+                            insertAdCard();
+                            // Yangi qo'shilgan reklama kartasini ham scroll kuzatuvchisiga (observer) ulash kerak
+                            const newAd = document.getElementById('adsgram_post');
+                            if (newAd) observer.observe(newAd);
+                        }
                     }
                 } else {
                     video.pause();
                 }
             } 
-            // Agar bu Reklama kartasi bo'lsa
+            // Agar ko'rinayotgan element REKLAMA POSTI bo'lsa
             else if (entry.target.classList.contains('ad-post')) {
                 if (entry.isIntersecting) {
-                    console.log("Foydalanuvchi reklamani ko'rmoqda");
-                    // Bu yerda iframe ichidagi ads.html avtomat ishga tushadi
+                    console.log("Foydalanuvchi reklama postiga keldi.");
+                    
+                    // Reklama ko'rilgandan keyin hisoblagichni nollaymiz, 
+                    // shunda keyingi safar yana 9 ta post ko'rganda yana reklama chiqadi
+                    userViewCount = 0;
+                    await update(ref(db, `users/${user.id}`), {
+                        viewCount: userViewCount
+                    });
                 }
             }
         });
     }, { threshold: 0.6 }); // 60% ekranda ko'rinsa faollashadi
 
+    // Barcha postlarni (jumladan reklama bo'lsa uni ham) kuzatishga olamiz
     document.querySelectorAll('.reel-post').forEach(post => {
         observer.observe(post);
     });
 }
 
-// Kodni ishga tushiramiz
+// Loyihani ishga tushirish
 initReels();
