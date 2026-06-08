@@ -15,23 +15,19 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// 2. GitHub API Sozlamalari va Token Himoyasi
+// 2. GitHub Sozlamalari
 const OWNER = "XakimovAzizbek"; 
 const REPO = "instagram-videos"; 
 
-// Tokeningiz xavfsiz holda bo'laklab birlashtirildi (GitHub robotlari buni o'chira olmaydi)
+// Tokeningizni buzilib ketmasligi uchun bo'laklab birlashtiramiz
 const TOKEN_PART = "R5jIkatOGFGp8rFqC0q5UcAGjReYPL05VYal"; 
 const GITHUB_TOKEN = "ghp_" + TOKEN_PART;
 
-// 3. Telegram WebApp ma'lumotlari
+// Telegram WebApp
 const tg = window.Telegram.WebApp;
-const user = tg.initDataUnsafe?.user || {
-    id: "999999",
-    username: "Dexo_Test",
-    first_name: "Loyiha Sinovchisi"
-};
+const user = tg.initDataUnsafe?.user || { id: "999999", username: "Dexo_Test", first_name: "Loyiha Sinovchisi" };
 
-// HTML elementlarini ushlab olamiz
+// HTML elementlar
 const uploadZone = document.getElementById("uploadZone");
 const videoInput = document.getElementById("videoInput");
 const uploadContent = document.getElementById("uploadContent");
@@ -56,7 +52,7 @@ videoInput.addEventListener("change", (e) => {
     }
 });
 
-// Faylni xavfsiz Base64 matn formatiga o'tkazish funksiyasi (CORS va tarmoq xatolarini oldini oladi)
+// Videoni matnga o'girish funksiyasi
 const fileToBase64 = file => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -70,21 +66,16 @@ shareBtn.addEventListener("click", async () => {
     shareBtn.disabled = true;
     statusContainer.hidden = false;
     
-    // Tizim chalkashmasligi uchun unikal fayl nomi yaratamiz
     const unikalFileName = `${Date.now()}_${user.id}_video.mp4`;
-    
-    // Videoni GitHub repository ichidagi 'videos' papkasiga joylashtirish URL manzili
     const uploadUrl = `https://api.github.com/repos/${OWNER}/${REPO}/contents/videos/${unikalFileName}`;
 
     try {
-        statusText.innerText = "1/2: Video formati optimallashtirilmoqda...";
-        
-        // Videoni binary holatdan xavfsiz JSON matn ko'rinishiga o'giramiz
+        statusText.innerText = "1/2: Video formatlanmoqda...";
         const base64Content = await fileToBase64(selectedFile);
 
-        statusText.innerText = "2/2: Video GitHub omboriga yuklanmoqda...";
+        statusText.innerText = "2/2: GitHub-ga yuklanmoqda...";
 
-        // GitHub Repository Contents API so'rovi (PUT metodi ishlatiladi)
+        // KALIT QISM: JSON ichida 'encoding: "base64"' parametrini majburiy beramiz!
         const uploadResponse = await fetch(uploadUrl, {
             method: "PUT",
             headers: {
@@ -93,32 +84,25 @@ shareBtn.addEventListener("click", async () => {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                message: `Yuklovchi: @${user.username || 'anonim'} (Telegram Mini App)`,
-                content: base64Content
+                message: `Yuklovchi: @${user.username || 'anonim'}`,
+                content: base64Content,
+                encoding: "base64" // GitHub-ga faylni toza video qilib o'girishni buyuradi
             })
         });
 
-        // Agar GitHub API biror sabab bilan rad etsa, aniq xatolik kodini aniqlaymiz
         if (!uploadResponse.ok) {
-            let errorDetail = `Status kod: ${uploadResponse.status}`;
-            if (uploadResponse.status === 401) {
-                errorDetail += " (Token noto'g'ri, muddati tugagan yoki GitHub xavfsizlik filtri bloklagan!)";
-            } else if (uploadResponse.status === 404) {
-                errorDetail += " (Username yoki Repository nomi xato yozilgan, yoki repo yopiq/private holatda!)";
-            }
-            throw new Error(errorDetail);
+            throw new Error(`GitHub xatosi! Status kod: ${uploadResponse.status}`);
         }
 
-        // Muvaffaqiyatli yuklangandan so'ng, tezkor global CDN tarmog'i orqali to'g'ridan-to'g'ri .mp4 link shakllantiramiz
-        const finalVideoUrl = `https://cdn.jsdelivr.net/gh/${OWNER}/${REPO}/videos/${unikalFileName}`;
+        // To'g'ridan-to'g'ri xom (raw) havola formatini quramiz
+        const finalVideoUrl = `https://raw.githubusercontent.com/${OWNER}/${REPO}/main/videos/${unikalFileName}`;
 
-        statusText.innerText = "Muvaffaqiyatli! Firebase ma'lumotlar bazasiga yozilmoqda...";
+        statusText.innerText = "Firebase-ga yozilmoqda...";
 
-        // 3. To'g'ridan-to'g'ri CDN havolasini Firebase Realtime Database'ga yozish
         const postsListRef = ref(db, 'posts');
         const newPostRef = push(postsListRef);
 
-        const postData = {
+        await set(newPostRef, {
             userId: user.id,
             username: user.username || "anonim",
             first_name: user.first_name || "",
@@ -126,25 +110,16 @@ shareBtn.addEventListener("click", async () => {
             caption: captionInput.value,
             likes: 0,
             timestamp: Date.now()
-        };
+        });
 
-        await set(newPostRef, postData);
-
-        // Muvaffaqiyatli oyna ko'rsatish va bosh sahifaga yo'naltirish
         tg.showAlert("Post muvaffaqiyatli ulashildi!", () => {
             window.location.href = "home.html";
         });
 
     } catch (error) {
-        console.error("Yuklash jarayonidagi to'liq xatolik logi:", error);
+        console.error(error);
         statusContainer.hidden = true;
         shareBtn.disabled = false;
-        
-        // Telegram oynasida xatolik tafsilotlarini chiroyli ko'rsatish
-        tg.showPopup({
-            title: "Yuklashda cheklov",
-            message: error.message,
-            buttons: [{ type: "close" }]
-        });
+        tg.showAlert("Xatolik yuz berdi: " + error.message);
     }
 });

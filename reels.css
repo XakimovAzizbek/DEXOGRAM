@@ -1,241 +1,260 @@
-/* Umumiy nollashtirish va sozlamalar */
 * {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-    font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    -webkit-tap-highlight-color: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 body {
-    background-color: #000000;
-    color: #ffffff;
+    background-color: #000;
+    color: #fff;
     overflow: hidden;
     height: 100vh;
 }
 
-/* Reels lentalari uchun asosiy blok */
+/* Vertikal varaqlash (Snap Scroll) effekti */
 .reels-container {
-    width: 100vw;
-    height: calc(100vh - 60px); /* Bottom nav uchun joy */
+    width: 100%;
+    height: calc(100vh - 60px); /* Pastki menyuni hisobga olgan holda */
     overflow-y: scroll;
     scroll-snap-type: y mandatory;
-    scroll-behavior: smooth;
+    scrollbar-width: none; /* Firefox uchun */
 }
 
-/* Skrolbarni yashirish */
 .reels-container::-webkit-scrollbar {
-    display: none;
+    display: none; /* Chrome/Safari uchun scrollbarni yashirish */
 }
 
-/* Har bitta to'liq ekranli video kartochkasi */
-.reels-card {
-    width: 100vw;
-    height: calc(100vh - 60px);
+/* Har bir Reels posti */
+.reel-post {
+    width: 100%;
+    height: 100%;
     scroll-snap-align: start;
     position: relative;
-    background-color: #000000;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    background-color: #000;
 }
 
-/* Video konteyneri */
-.video-wrapper {
+/* Video o'lchamlari */
+.reel-video {
     width: 100%;
     height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1;
+    object-fit: cover;
 }
 
-/* Toza HTML5 video tegi uchun mukammal o'lcham */
-.reels-video {
-    width: 100%;
-    height: 100%;
-    object-fit: contain; /* Videoni buzmasdan yoki kesmasdan ekranga to'liq sig'diradi */
-    background-color: #000000;
-}
-
-/* Video ustidagi ma'lumotlar overlay qismi */
-.reels-overlay {
+/* Video ustidagi ma'lumotlar (Chap tomonda) */
+.reel-overlay-left {
     position: absolute;
     bottom: 20px;
-    left: 16px;
-    right: 85px;
+    left: 15px;
+    right: 80px;
     z-index: 10;
-    pointer-events: none; /* Kliklarga xalaqit bermaydi */
+    text-shadow: 1px 1px 5px rgba(0,0,0,0.8);
 }
 
-.reels-user-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-}
-
-.reels-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: 2px solid #ffffff;
-    background: linear-gradient(45deg, #f09433, #dc2743, #bc1888);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.reel-user-id {
     font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.reel-caption {
     font-size: 14px;
-    color: #ffffff;
-}
-
-.reels-username {
-    font-weight: 600;
-    font-size: 15px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-}
-
-.reels-caption {
-    font-size: 13.5px;
-    color: #ffffff;
+    color: #e6e6e6;
     line-height: 1.4;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-    max-height: 60px;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
-/* O'ng tomondagi Sidebar (Tugmalar) */
-.reels-sidebar {
+/* O'ng tomondagi harakatlar tugmalari (Layk, Koment, Share) */
+.reel-overlay-right {
     position: absolute;
-    right: 16px;
-    bottom: 30px;
+    bottom: 40px;
+    right: 10px;
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 20px;
     z-index: 10;
-    align-items: center;
 }
 
-.sidebar-icon {
+.action-btn {
+    background: none;
+    border: none;
+    color: white;
     display: flex;
     flex-direction: column;
     align-items: center;
     cursor: pointer;
-}
-
-.sidebar-icon i {
     font-size: 28px;
-    color: #ffffff;
-    filter: drop-shadow(0px 2px 5px rgba(0,0,0,0.7));
     transition: transform 0.1s ease;
 }
 
-.sidebar-icon i:active {
-    transform: scale(1.3);
+.action-btn:active {
+    transform: scale(0.9);
 }
 
-/* Layk bosilgandagi qizil effekt */
-.sidebar-icon i.fa-heart.liked {
-    color: #ff2b55 !important;
-    animation: hitLike 0.3s ease-in-out;
-}
-
-.sidebar-icon span {
+.action-btn span {
     font-size: 12px;
-    margin-top: 6px;
-    font-weight: 600;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-    color: #ffffff;
+    margin-top: 5px;
+    font-weight: 500;
 }
 
-@keyframes hitLike {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.4); }
-    100% { transform: scale(1); }
+.action-btn.liked {
+    color: #ff2d55; /* Qizil layk */
 }
 
-/* Ovoz indikatori xabari */
-.volume-status-notice {
+/* Ovoz indikatori ekranda miltillab chiqishi uchun */
+.audio-status-icon {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    background: rgba(0, 0, 0, 0.7);
-    width: 60px;
-    height: 60px;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.6);
+    padding: 15px;
     border-radius: 50%;
-    z-index: 20;
+    font-size: 30px;
+    z-index: 5;
     pointer-events: none;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: transform 0.2s ease, opacity 0.2s ease;
     opacity: 0;
-}
-.volume-status-notice i {
-    font-size: 24px;
-    color: #ffffff;
-}
-.volume-status-notice.show {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
+    transition: opacity 0.2s ease;
 }
 
-/* Loader / Spinner */
-.reels-loading {
+/* Sharhlar oynasi (Modal) uslubi */
+.comment-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+}
+
+.comment-modal-backdrop {
+    width: 100%;
+    height: 40%;
+    background: rgba(0,0,0,0.4);
+}
+
+.comment-modal-content {
+    width: 100%;
+    height: 60%;
+    background: #121212;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    padding: 15px;
+}
+
+.comment-modal-header {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    height: 100%;
-    gap: 15px;
-    background-color: #000000;
+    border-bottom: 1px solid #262626;
+    padding-bottom: 10px;
 }
 
-.spinner {
-    width: 42px;
-    height: 42px;
-    border: 4px solid rgba(255, 255, 255, 0.1);
-    border-top: 4px solid #ff2b55;
+.close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+}
+
+.comments-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 0;
+}
+
+/* Har bir sharh dizayni */
+.comment-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.comment-avatar {
+    width: 35px;
+    height: 35px;
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    background: #262626;
 }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+.comment-details {
+    display: flex;
+    flex-direction: column;
 }
 
-/* Pastki Navbar */
+.comment-user {
+    font-weight: bold;
+    font-size: 13px;
+    color: #a8a8a8;
+}
+
+.comment-text {
+    font-size: 14px;
+    color: #fff;
+    margin-top: 2px;
+}
+
+/* Sharh yozish joyi */
+.comment-input-area {
+    display: flex;
+    gap: 10px;
+    border-top: 1px solid #262626;
+    padding-top: 10px;
+}
+
+.comment-input-area input {
+    flex: 1;
+    background: #262626;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 15px;
+    color: white;
+    outline: none;
+}
+
+.comment-input-area button {
+    background: #0095f6;
+    border: none;
+    color: white;
+    padding: 0 15px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+/* Pastki menyu sozlamalari */
 .bottom-nav {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
     height: 60px;
-    background-color: #000000;
-    border-top: 1px solid #121212;
+    background-color: #000;
+    border-top: 1px solid #262626;
     display: flex;
     justify-content: space-around;
     align-items: center;
-    z-index: 1000;
-    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 50;
 }
 
 .nav-item {
+    color: #8e8e8e;
+    text-decoration: none;
     display: flex;
     flex-direction: column;
     align-items: center;
-    text-decoration: none;
-    color: #555555;
-    width: 20%;
+    font-size: 18px;
 }
 
-.nav-item i { font-size: 20px; margin-bottom: 2px; }
-.nav-item span { font-size: 10px; }
-.nav-item.active { color: #ffffff; }
+.nav-item span {
+    font-size: 10px;
+    margin-top: 2px;
+}
+
+.nav-item.active {
+    color: #fff;
+}
