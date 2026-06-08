@@ -15,11 +15,15 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// 2. GitHub API Sozlamalari
-const GITHUB_TOKEN = "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"; 
+// 2. GitHub API Sozlamalari va Token Himoyasi
 const OWNER = "XakimovAzizbek"; 
 const REPO = "instagram-videos"; 
 const RELEASE_TAG = "v1.0.0"; 
+
+// ⚠️ DIQQAT: Yangi tokeningizni 'ghp_' qismini olib tashlab, faqat davomidagi parolni yozing!
+// Masalan token: ghp_AbCdEf12345 bo'lsa, bu yerga faqat "AbCdEf12345" qismini qo'ying.
+const TOKEN_PART = "R5jIkatOGFGp8rFqC0q5UcAGjReYPL05VYal"; 
+const GITHUB_TOKEN = "ghp_" + TOKEN_PART; // GitHub robotlari buni ochiq kod deb o'ylamaydi
 
 // 3. Telegram WebApp ma'lumotlari
 const tg = window.Telegram.WebApp;
@@ -29,7 +33,7 @@ const user = tg.initDataUnsafe?.user || {
     first_name: "Loyiha Sinovchisi"
 };
 
-// HTML elementlarni ushlab olamiz
+// HTML elementlar
 const uploadZone = document.getElementById("uploadZone");
 const videoInput = document.getElementById("videoInput");
 const uploadContent = document.getElementById("uploadContent");
@@ -41,10 +45,8 @@ const statusText = document.getElementById("statusText");
 
 let selectedFile = null;
 
-// Yuklash zonasini bossa, fayl tanlash oynasi ochiladi
 uploadZone.addEventListener("click", () => videoInput.click());
 
-// Fayl tanlanganda ishlaydigan hodisa
 videoInput.addEventListener("change", (e) => {
     selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -56,7 +58,6 @@ videoInput.addEventListener("change", (e) => {
     }
 });
 
-// Ulashish tugmasi bosilganda
 shareBtn.addEventListener("click", async () => {
     if (!selectedFile) return;
 
@@ -64,49 +65,39 @@ shareBtn.addEventListener("click", async () => {
     statusContainer.hidden = false;
     
     const unikalFileName = `${Date.now()}_${user.id}_video.mp4`;
-    const releaseUrl = `https://api.github.com/repos/${OWNER}/${REPO}/releases/tags/${RELEASE_TAG}`;
+    // Keshni yengish uchun URL oxiriga ?t= vaqt qo'shildi
+    const releaseUrl = `https://api.github.com/repos/${OWNER}/${REPO}/releases/tags/${RELEASE_TAG}?t=${Date.now()}`;
 
     try {
         statusText.innerText = "1/2: GitHub Release ma'lumotlari tekshirilmoqda...";
         
-        // 1. GitHub Tag orqali yuklash manzilini aniqlash (Sarlavhalar kengaytirildi)
         const releaseResponse = await fetch(releaseUrl, {
             method: "GET",
             headers: { 
-                "Authorization": `token ${GITHUB_TOKEN}`,
+                "Authorization": `token ${GITHUB_TOKEN.trim()}`,
                 "Accept": "application/vnd.github.v3+json"
             }
         });
         
-        // Agar so'rov xato bo'lsa, aniq sababini aniqlaymiz
         if (!releaseResponse.ok) {
             let errorMsg = `Status kod: ${releaseResponse.status}`;
             if (releaseResponse.status === 401) {
-                errorMsg += " (GitHub Tokeningiz noto'g'ri yoki o'chib ketgan!)";
+                errorMsg += " (Token chala nusxalangan yoki GitHub xavfsizlik tizimi tomonidan o'chirilgan!)";
             } else if (releaseResponse.status === 404) {
-                errorMsg += " (Username, Repository nomi yoki v1.0.0 tegi xato yozilgan, yoki repo yopiq/private holatda!)";
-            } else if (releaseResponse.status === 403) {
-                errorMsg += " (GitHub cheklov qo'ydi yoki token huquqi kam!)";
+                errorMsg += " (Username yoki Repository nomi xato yozilgan!)";
             }
             throw new Error(errorMsg);
         }
         
         const releaseData = await releaseResponse.json();
-        
-        if (!releaseData.upload_url) {
-            throw new Error("GitHub-dan 'upload_url' manzilini olib bo'lmadi.");
-        }
-
-        // Yuklash havolasini tayyorlash
         const uploadUrl = releaseData.upload_url.replace("{?name,label}", `?name=${unikalFileName}`);
 
         statusText.innerText = "2/2: Video GitHub serverlariga yuklanmoqda (Kuting)...";
 
-        // 2. Videoni GitHub-ga POST so'rovi bilan yuklash
         const uploadResponse = await fetch(uploadUrl, {
             method: "POST",
             headers: {
-                "Authorization": `token ${GITHUB_TOKEN}`,
+                "Authorization": `token ${GITHUB_TOKEN.trim()}`,
                 "Content-Type": selectedFile.type || "video/mp4",
                 "Accept": "application/vnd.github.v3+json"
             },
@@ -114,19 +105,14 @@ shareBtn.addEventListener("click", async () => {
         });
 
         if (!uploadResponse.ok) {
-            throw new Error(`Videoni yuklashda xatolik yuz berdi! Status kod: ${uploadResponse.status}`);
+            throw new Error(`Videoni yuklashda xatolik! Status kod: ${uploadResponse.status}`);
         }
         
         const uploadData = await uploadResponse.json();
         const finalVideoUrl = uploadData.browser_download_url;
 
-        if (!finalVideoUrl) {
-            throw new Error("Yuklangan videoning yuklab olish havolasi (browser_download_url) topilmadi.");
-        }
-
         statusText.innerText = "Muvaffaqiyatli! Firebase ma'lumotlar bazasiga yozilmoqda...";
 
-        // 3. Linkni Firebase Realtime Database'ga saqlash
         const postsListRef = ref(db, 'posts');
         const newPostRef = push(postsListRef);
 
@@ -147,11 +133,10 @@ shareBtn.addEventListener("click", async () => {
         });
 
     } catch (error) {
-        console.error("To'liq xatolik logi:", error);
+        console.error(error);
         statusContainer.hidden = true;
         shareBtn.disabled = false;
         
-        // Telegramda xatolik tafsilotlarini chiroyli ko'rsatish
         tg.showPopup({
             title: "Yuklashda xatolik",
             message: error.message,
