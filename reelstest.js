@@ -35,8 +35,8 @@ let globalMuted = true; // Sukut bo'yicha videolar ovozsiz boshlanadi
 
 // REKLAMA MANTIQI UCHUN O'ZGARUVCHILAR
 let userViewCount = 0; 
-const AD_TRIGGER_COUNT = 9; // Jami 9 ta post ko'rilganda keyingisi reklama bo'ladi
-let adInserted = false;
+const AD_TRIGGER_COUNT = 9; // 9 ta post ko'rilgandan keyin keyingisi reklama bo'ladi
+let globalObserver = null; // Observerni dinamik yangilash uchun
 
 // Firebase'dan foydalanuvchining ko'rishlar sonini yuklash
 async function loadUserViewCount() {
@@ -58,7 +58,6 @@ const postsRef = ref(db, 'posts');
 
 async function initReels() {
     await loadUserViewCount(); // Birinchi bo'lib Firebase'dan hisoblagichni o'qiymiz
-    adInserted = false; // Har safar sahifa yangilanganda qayta tiklanadi
 
     onValue(postsRef, (snapshot) => {
         reelsContainer.innerHTML = "";
@@ -106,19 +105,24 @@ async function initReels() {
             setupVideoControls(postId);
         });
 
-        // AGAR FOYDALANUVCHI ALLAQACHON 9 TA POST KO'RGAN BO'LSA (Yoki kirib-chiqib jami 9 taga yetgan bo'lsa)
-        // Ro'yxat oxiriga (4-postdan keyin) scroll qilsa bo'ladigan reklama postini darhol qo'shamiz
+        // AGAR FOYDALANUVCHI ALLAQACHON 9 TA POST KO'RIB KIRGAN BO'LSA
+        // Uni birinchi turgan postdan keyinoq ko'rinadigan qilib joylaymiz (oxirida emas!)
         if (userViewCount >= AD_TRIGGER_COUNT) {
-            insertAdCard();
+            const firstPost = reelsContainer.querySelector('.real-video-post');
+            if (firstPost) {
+                insertAdCardAfterElement(firstPost);
+            }
         }
 
         handleIntersectionObserver();
     });
 }
 
-// Reklama postini dinamik qo'shish funksiyasi
-function insertAdCard() {
-    if (adInserted) return; // Ikki marta qo'shilib ketishining oldini olish
+// Reklamani aynan kerakli elementdan (postdan) keyingi o'ringa joylashtirish funksiyasi
+function insertAdCardAfterElement(element) {
+    // Eski reklama bo'lsa o'chiramiz, chalkashlik bo'lmasligi uchun
+    const oldAd = document.getElementById('adsgram_post');
+    if (oldAd) oldAd.remove();
     
     const adHTML = `
         <div class="reel-post ad-post" id="adsgram_post">
@@ -130,8 +134,13 @@ function insertAdCard() {
             </div>
         </div>
     `;
-    reelsContainer.insertAdjacentHTML('beforeend', adHTML);
-    adInserted = true;
+    element.insertAdjacentHTML('afterend', adHTML);
+    
+    // Agar observer ishlayotgan bo'lsa, yangi reklamani ham kuzatuvga qo'shamiz
+    const newAd = document.getElementById('adsgram_post');
+    if (newAd && globalObserver) {
+        globalObserver.observe(newAd);
+    }
 }
 
 // 4. Video boshqaruv datchiklari (O'zgarishsiz qoldi)
@@ -233,11 +242,11 @@ sendCommentBtn.addEventListener('click', async () => {
 closeCommentBtn.addEventListener('click', () => commentModal.hidden = true);
 modalBackdrop.addEventListener('click', () => commentModal.hidden = true);
 
-// 6. AVTOMATIK IJRO VA REKLAMA HISOBLASH TIZIMI (To'g'rilangan qism)
+// 6. AVTOMATIK IJRO VA DINAMIK ORALIK REKLAMA TIZIMI (To'liq yangilangan qism)
 function handleIntersectionObserver() {
     let lastViewedPostId = null;
 
-    const observer = new IntersectionObserver((entries) => {
+    globalObserver = new IntersectionObserver((entries) => {
         entries.forEach(async (entry) => {
             // Agar ko'rinayotgan element haqiqiy video post bo'lsa
             if (entry.target.classList.contains('real-video-post')) {
@@ -248,22 +257,20 @@ function handleIntersectionObserver() {
                     video.muted = globalMuted;
                     video.play().catch(err => console.log("Avto-ijro bloklandi"));
 
-                    // Faqat yangi postga scroll qilingandagina hisoblaymiz
+                    // Faqat foydalanuvchi yangi postga scroll qilgandagina hisoblaymiz
                     if (lastViewedPostId !== currentPostId) {
                         lastViewedPostId = currentPostId;
                         userViewCount++;
 
-                        // Firebase-ga yangilangan ko'rishlar sonini yuboramiz
+                        // Firebase-ga yangilangan ko'rishlar sonini darhol yuboramiz
                         await update(ref(db, `users/${user.id}`), {
                             viewCount: userViewCount
                         });
 
-                        // Agar hisoblagich 9 taga yetgan bo'lsa, darhol pastga reklama kartasini joylaymiz
+                        // KALIT MANTIQ: Agar hisoblagich 9 taga yetsa, reklamani oxiriga emas, 
+                        // aynan hozir foydalanuvchi ko'rib turgan joriy postdan keyingi o'ringa (afterend) joylaymiz!
                         if (userViewCount >= AD_TRIGGER_COUNT) {
-                            insertAdCard();
-                            // Yangi qo'shilgan reklama kartasini ham scroll kuzatuvchisiga (observer) ulash kerak
-                            const newAd = document.getElementById('adsgram_post');
-                            if (newAd) observer.observe(newAd);
+                            insertAdCardAfterElement(entry.target);
                         }
                     }
                 } else {
@@ -273,10 +280,9 @@ function handleIntersectionObserver() {
             // Agar ko'rinayotgan element REKLAMA POSTI bo'lsa
             else if (entry.target.classList.contains('ad-post')) {
                 if (entry.isIntersecting) {
-                    console.log("Foydalanuvchi reklama postiga keldi.");
+                    console.log("Foydalanuvchi reklama postini ko'rmoqda.");
                     
-                    // Reklama ko'rilgandan keyin hisoblagichni nollaymiz, 
-                    // shunda keyingi safar yana 9 ta post ko'rganda yana reklama chiqadi
+                    // Reklama postiga o'tishi bilan Firebase hisoblagichini nollaymiz
                     userViewCount = 0;
                     await update(ref(db, `users/${user.id}`), {
                         viewCount: userViewCount
@@ -286,9 +292,9 @@ function handleIntersectionObserver() {
         });
     }, { threshold: 0.6 }); // 60% ekranda ko'rinsa faollashadi
 
-    // Barcha postlarni (jumladan reklama bo'lsa uni ham) kuzatishga olamiz
+    // Barcha mavjud elementlarni kuzatuvga olamiz
     document.querySelectorAll('.reel-post').forEach(post => {
-        observer.observe(post);
+        globalObserver.observe(post);
     });
 }
 
