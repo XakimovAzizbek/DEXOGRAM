@@ -20,7 +20,7 @@ const OWNER = "XakimovAzizbek";
 const REPO = "instagram-videos"; 
 
 // Tokeningizni buzilib ketmasligi uchun bo'laklab birlashtiramiz
-const TOKEN_PART = "R5jIkatOGFGp8rFqC0q5UcAGjReYPL05VYal"; 
+const TOKEN_PART = "ukhC2TXLTHMeKLXuhgkXhOkCFSvwWI0RY8X3"; 
 const GITHUB_TOKEN = "ghp_" + TOKEN_PART;
 
 // Telegram WebApp
