@@ -2,41 +2,35 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DexoGram - Create</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dexogram - Create Post</title>
     <link rel="stylesheet" href="create.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-    <header class="app-header">
-        <div class="back-btn" onclick="window.location.href='home.html'">
-            <i class="fa-solid fa-arrow-left"></i>
-        </div>
-        <div class="page-title">Yangi post yaratish</div>
-        <div style="width: 24px;"></div>
+    <header class="header">
+        <h1 class="logo">YANGI POST</h1>
+        <a href="home.html" class="close-btn">X yopish</a>
     </header>
 
     <main class="create-container">
-        <input type="file" id="videoInput" accept="video/mp4,video/x-m4v,video/quicktime,video/*" style="display: none;">
-
-        <div class="upload-box" id="uploadBox">
-            <div class="upload-placeholder" id="uploadPlaceholder">
-                <i class="fa-solid fa-cloud-arrow-up"></i>
-                <p>Galereya yoki Fayllardan tanlang</p>
-                <span>Faqat video fayllar yuklanadi (Max: 50 MB)</span>
+        <div class="upload-zone" id="uploadZone">
+            <input type="file" id="videoInput" accept="video/*" hidden>
+            <div class="upload-content" id="uploadContent">
+                <svg viewBox="0 0 24 24" class="upload-icon"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                <p>Videoni tanlang (.mp4, .mov)</p>
             </div>
-            <video id="videoPreview" style="display: none; width: 100%; height: 100%; object-fit: contain; border-radius: 8px; background-color: #000000;" controls playsinline></video>
+            <video id="videoPreview" controls hidden></video>
         </div>
 
-        <div class="caption-section">
-            <textarea id="captionInput" placeholder="Video haqida biror narsa yozing... #reels #trend #dexo" rows="4"></textarea>
+        <div class="input-group">
+            <textarea id="captionInput" placeholder="Tavsif yozing... #dexogram #tma" rows="4"></textarea>
         </div>
 
-        <div class="loader-container" id="loaderContainer" style="display: none;">
+        <div class="status-container" id="statusContainer" hidden>
             <div class="spinner"></div>
-            <p id="progressText">Video Telegramga yuklanmoqda...</p>
+            <p id="statusText">Video GitHub-ga yuklanmoqda (Uzoqroq vaqt olishi mumkin)...</p>
         </div>
 
         <button class="share-btn" id="shareBtn" disabled>Ulashish (Share)</button>
@@ -44,22 +38,27 @@
 
     <nav class="bottom-nav">
         <a href="home.html" class="nav-item">
-            <i class="fa-solid fa-house"></i>
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
             <span>Home</span>
         </a>
         <a href="search.html" class="nav-item">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <span>Search</span>
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <span>Qidirish</span>
         </a>
-        <a href="create.html" class="nav-item active">
-            <i class="fa-regular fa-square-plus"></i>
-            <span>Create</span>
+        <a href="create.html" class="nav-item active upload-btn">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            <span>Post</span>
         </a>
         <a href="reels.html" class="nav-item">
-            <i class="fa-solid fa-clapperboard"></i>
+            <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg>
             <span>Reels</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+            <span>Profil</span>
         </a>
     </nav>
 
+    <script type="module" src="create.js"></script>
 </body>
 </html>
