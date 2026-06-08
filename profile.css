@@ -1,312 +1,303 @@
-/* Profil Ma'lumotlari Stillari */
-.settings-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--text-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+:root {
+    --bg: #0b0e14;
+    --card: #161b22;
+    --text: #f0f6fc;
+    --accent: #00ffff;
+    --gray: #8b949e;
+    --border: #30363d;
+    --red: #ff007f;
 }
 
-.settings-btn svg {
-    width: 26px;
-    height: 26px;
-    fill: currentColor;
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    padding-bottom: 70px;
 }
 
-.profile-container {
-    padding: 20px;
-    text-align: center;
-    border-bottom: 1px solid var(--border-color);
+/* ========== HEADER ========== */
+.header {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 18px;
+    background: rgba(11,14,20,0.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
 }
 
-.profile-avatar {
-    width: 80px;
-    height: 80px;
+.logo {
+    font-size: 18px; font-weight: 900; letter-spacing: 1px;
     background: linear-gradient(45deg, #00ffff, #ff007f);
-    border-radius: 50%;
-    margin: 0 auto 12px auto;
-    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
-.profile-username {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 4px;
+/* 3 chiziqli menu button */
+.menu-btn {
+    background: none; border: none; cursor: pointer;
+    display: flex; flex-direction: column; gap: 5px; padding: 4px;
+}
+.menu-btn span {
+    display: block; width: 22px; height: 2px;
+    background: var(--accent); border-radius: 2px;
 }
 
-.profile-id {
-    font-size: 13px;
-    color: var(--gray-color);
+/* ========== SIDE MENU ========== */
+.overlay {
+    display: none;
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 99;
+}
+.overlay.show { display: block; }
+
+.side-menu {
+    position: fixed; top: 0; right: -260px;
+    width: 240px; height: 100%;
+    background: var(--card);
+    border-left: 1px solid var(--border);
+    z-index: 100;
+    transition: right 0.3s ease;
+    padding: 60px 0 20px 0;
+    display: flex; flex-direction: column; gap: 8px;
+}
+.side-menu.open { right: 0; }
+
+.side-item {
+    padding: 14px 20px;
+    color: var(--accent);
+    font-size: 14px; font-weight: 500;
+    text-decoration: none;
+    background: none; border: none; cursor: pointer;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+}
+.side-item:hover { background: rgba(0,255,255,0.08); }
+.side-item.danger { color: var(--red); }
+.side-item.danger:hover { background: rgba(255,0,127,0.08); }
+
+/* ========== PROFIL QISMI ========== */
+main { max-width: 480px; margin: 0 auto; padding: 0; }
+
+.profile-section {
+    display: flex; align-items: center; gap: 16px;
+    padding: 20px 16px;
+    border-bottom: 1px solid var(--border);
 }
 
-/* Statistika Bloklari */
-.stats-container {
+.avatar {
+    width: 72px; height: 72px;
+    border-radius: 50%; object-fit: cover;
+    border: 2.5px solid var(--accent);
+    flex-shrink: 0;
+}
+
+.username { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.uid { font-size: 12px; color: var(--gray); }
+.uid b { color: var(--accent); font-weight: 600; }
+
+/* ========== STATISTIKA ========== */
+.stats-row {
     display: flex;
-    justify-content: space-around;
-    margin-top: 20px;
-    background: var(--card-bg);
-    padding: 15px;
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border);
 }
 
-.stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+.stat-card {
+    flex: 1; text-align: center;
+    padding: 16px 10px;
+    border-right: 1px solid var(--border);
+}
+.stat-card:last-child { border-right: none; }
+
+.stat-big { font-size: 20px; font-weight: 700; color: var(--accent); }
+.stat-small { font-size: 11px; color: var(--gray); margin-top: 4px; }
+
+/* ========== VIDEOLAR ========== */
+.videos-wrap { padding: 16px; }
+.section-title {
+    font-size: 13px; font-weight: 600;
+    color: var(--gray); letter-spacing: 0.5px;
+    text-transform: uppercase; margin-bottom: 12px;
 }
 
-.stat-count {
-    font-size: 16px;
-    font-weight: bold;
-    color: var(--accent-color);
-}
-
-.stat-label {
-    font-size: 11px;
-    color: var(--gray-color);
-    margin-top: 4px;
-}
-
-/* Video To'r (Grid) qismi */
-.video-grid-container {
-    padding: 15px;
-}
-
-.grid-title {
-    font-size: 14px;
-    color: var(--gray-color);
-    margin-bottom: 12px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.video-grid {
+.videos-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 4px;
+    gap: 3px;
 }
 
-.grid-item {
-    position: relative;
-    width: 100%;
-    padding-top: 133%; /* 3:4 Vertikal pleyer proporsiyasi */
-    background: #000;
+.no-videos {
+    grid-column: 1/-1;
+    text-align: center; padding: 40px 0;
+    color: var(--gray); font-size: 13px;
+}
+
+.video-thumb {
+    aspect-ratio: 1;
+    background: var(--card);
     border-radius: 4px;
     overflow: hidden;
     cursor: pointer;
-}
-
-.grid-item video {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* To'liq video ko'rish Modali */
-.video-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 2000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-backdrop {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.95);
-}
-
-.modal-content {
     position: relative;
+}
+
+.video-thumb img {
+    width: 100%; height: 100%; object-fit: cover;
+    display: block;
+}
+
+.video-thumb .play-icon {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    font-size: 22px; opacity: 0.8;
+    pointer-events: none;
+}
+
+/* ========== MODAL UMUMIY ========== */
+.modal-overlay {
+    display: none;           /* default: yashirin */
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 200;
+}
+.modal-overlay.show { display: flex; align-items: flex-end; }
+
+.modal-bg {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.65);
+}
+
+.modal-box {
+    position: relative; z-index: 1;
+    background: var(--card);
     width: 100%;
-    max-width: 450px;
-    height: 100%;
-    max-height: 80vh;
-    background: #000;
-    display: flex;
-    flex-direction: column;
-    border-radius: 16px;
-    overflow: hidden;
-    border: 1px solid var(--border-color);
-    z-index: 2100;
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    padding: 20px 16px 24px;
+    max-height: 88vh; overflow-y: auto;
 }
 
-.close-modal-btn {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    background: rgba(0,0,0,0.5);
-    border: none;
-    color: #fff;
-    font-size: 18px;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    z-index: 2200;
-    cursor: pointer;
+.modal-close {
+    position: absolute; top: 12px; right: 14px;
+    background: rgba(0,0,0,0.35); border: none;
+    color: var(--text); font-size: 22px;
+    width: 34px; height: 34px; border-radius: 50%;
+    cursor: pointer; z-index: 2;
 }
 
-.modal-player-wrapper {
-    position: relative;
-    flex: 1;
-    background: #000;
-    display: flex;
-    align-items: center;
+/* ========== VIDEO MODAL KONTENT ========== */
+#modalVideo {
+    width: 100%; max-height: 260px;
+    border-radius: 10px; background: #000;
+    margin-bottom: 14px; display: block;
 }
 
-.modal-video {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-/* Modal ichidagi tugmalar */
-.modal-actions-right {
-    position: absolute;
-    right: 15px;
-    bottom: 40px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    z-index: 2200;
-}
-
-.action-item {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-size: 12px;
-    color: #fff;
-}
-
-.modal-action-btn {
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255,255,255,0.2);
-    color: white;
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    font-size: 18px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Uchta nuqta dropdown menyu */
-.dropdown-menu {
-    position: absolute;
-    bottom: 50px;
-    right: 0;
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    width: 120px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    overflow: hidden;
-}
-
-.dropdown-item {
-    width: 100%;
-    padding: 10px;
-    background: none;
-    border: none;
-    color: var(--text-color);
-    font-size: 13px;
-    text-align: left;
-    cursor: pointer;
-}
-
-.dropdown-item:active {
-    background: rgba(255,255,255,0.1);
-}
-
-.dropdown-item.delete {
-    color: #ff453a;
-}
-
-/* Video matni */
-.modal-video-info {
-    padding: 15px;
-    background: var(--card-bg);
-    border-top: 1px solid var(--border-color);
-}
-
-.modal-user-id {
-    font-size: 14px;
-    font-weight: bold;
-    color: var(--accent-color);
-    margin-bottom: 5px;
-}
-
-.modal-caption {
-    font-size: 13px;
-    color: var(--text-color);
-}
-
-/* Tahrirlash Modali */
-.edit-modal {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 3000;
-}
-
-.edit-modal-content {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    padding: 20px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 350px;
-}
-
-.edit-modal-content h3 {
+.modal-meta {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
     margin-bottom: 12px;
-    font-size: 16px;
+}
+.meta-id { font-size: 12px; color: var(--accent); margin-bottom: 6px; }
+.meta-caption { font-size: 13px; color: var(--text); line-height: 1.5; }
+
+.modal-stats {
+    display: flex; gap: 24px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 14px;
+}
+.ms-item { text-align: center; }
+.ms-num { font-size: 18px; font-weight: 700; color: var(--accent); }
+.ms-label { font-size: 11px; color: var(--gray); margin-top: 3px; }
+
+.modal-actions { display: flex; flex-direction: column; gap: 9px; }
+
+.btn-share, .btn-edit, .btn-delete {
+    width: 100%; padding: 11px 16px;
+    border-radius: 8px; font-size: 13px;
+    font-weight: 500; cursor: pointer; border: none;
+    transition: opacity 0.15s;
+}
+.btn-share {
+    background: rgba(0,255,255,0.12);
+    border: 1px solid rgba(0,255,255,0.25);
+    color: var(--accent);
+}
+.btn-edit {
+    background: rgba(0,255,255,0.08);
+    border: 1px solid rgba(0,255,255,0.18);
+    color: var(--accent);
+}
+.btn-delete {
+    background: rgba(255,0,127,0.1);
+    border: 1px solid rgba(255,0,127,0.2);
+    color: var(--red);
+}
+.btn-share:active, .btn-edit:active, .btn-delete:active { opacity: 0.7; }
+
+.owner-actions {
+    display: flex; flex-direction: column; gap: 9px;
+    margin-top: 9px;
 }
 
-.edit-modal-content textarea {
-    width: 100%;
-    background: var(--bg-color);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    color: white;
-    padding: 10px;
-    font-size: 14px;
-    resize: none;
-    margin-bottom: 15px;
+/* ========== TAHRIRLASH MODAL ========== */
+.small-box { padding: 20px 16px 28px; }
+.small-box h3 { font-size: 15px; margin-bottom: 14px; }
+
+.small-box textarea {
+    width: 100%; padding: 10px 12px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text);
+    font-size: 13px; font-family: inherit;
+    resize: vertical; min-height: 90px;
+    outline: none;
+}
+.small-box textarea:focus { border-color: var(--accent); }
+
+.edit-btns {
+    display: flex; gap: 10px; margin-top: 14px;
+}
+.btn-cancel {
+    flex: 1; padding: 10px; border-radius: 8px;
+    background: rgba(139,148,158,0.12);
+    border: 1px solid var(--border);
+    color: var(--gray); font-size: 13px; cursor: pointer;
+}
+.btn-save {
+    flex: 1; padding: 10px; border-radius: 8px;
+    background: linear-gradient(90deg, #00ffff, #00bbff);
+    border: none; color: #000;
+    font-size: 13px; font-weight: 700; cursor: pointer;
 }
 
-.edit-modal-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
+/* ========== BOTTOM NAV ========== */
+.bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 62px;
+    background: rgba(22,27,34,0.95);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-around; align-items: center;
+    z-index: 50;
 }
 
-.edit-modal-buttons button {
-    padding: 8px 16px;
-    border-radius: 6px;
-    border: none;
-    font-size: 13px;
-    cursor: pointer;
+.nav-item {
+    display: flex; flex-direction: column; align-items: center;
+    text-decoration: none; color: var(--gray);
+    font-size: 9px; gap: 3px; transition: color 0.15s;
 }
+.nav-item svg { width: 20px; height: 20px; fill: currentColor; }
+.nav-item.active, .nav-item:hover { color: var(--accent); }
 
-.btn-secondary { background: #30363d; color: white; }
-.btn-primary { background: var(--accent-color); color: #000; font-weight: bold; }
+.upload-btn svg {
+    width: 26px; height: 26px;
+    background: var(--accent); fill: var(--bg);
+    border-radius: 50%; padding: 3px;
+}
+.upload-btn { color: var(--accent); }

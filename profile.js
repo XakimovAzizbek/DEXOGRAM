@@ -1,200 +1,220 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getDatabase, ref, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-// Firebase Konfiguratsiyasi
 const firebaseConfig = {
   apiKey: "AIzaSyBPTYL-3jOhcLi9UkjQWmSG6ArRVio5QKE",
   authDomain: "loyiha-98a22.firebaseapp.com",
   projectId: "loyiha-98a22",
   storageBucket: "loyiha-98a22.firebasestorage.app",
   messagingSenderId: "1022023262123",
-  appId: "1:1022023262123:web:55c0bcf456391fdf80fcee",
-  measurementId: "G-PPR0TL0CLX"
+  appId: "1:1022023262123:web:55c0bcf456391fdf80fcee"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Telegram WebApp sozlamasi
 const tg = window.Telegram.WebApp;
-const user = tg.initDataUnsafe?.user || { id: "999999", username: "Dexo_Test" };
+tg.expand();
 
-// Profil interfeysini sozlash
-document.getElementById("profileUsername").innerText = `@${user.username || 'anonim'}`;
-document.getElementById("profileId").innerText = `ID: ${user.id}`;
+const user = tg.initDataUnsafe?.user || {
+    id: "999999",
+    username: "Dexo_Test",
+    first_name: "Test User",
+    photo_url: null
+};
 
-// 3 ta chiziq (Settings) bosilganda o'tish mantiqi
-document.getElementById("settingsBtn").addEventListener("click", () => {
-    window.location.href = "setting.html";
-});
+// DOM
+const profileAvatar     = document.getElementById("profileAvatar");
+const profileUsername   = document.getElementById("profileUsername");
+const profileId         = document.getElementById("profileId");
+const subscribersCount  = document.getElementById("subscribersCount");
+const subscriptionsCount= document.getElementById("subscriptionsCount");
+const videosGrid        = document.getElementById("videosGrid");
 
-// Global o'zgaruvchilar
-let myPostsData = {};
-let selectedPostId = null;
+const menuBtn      = document.getElementById("menuBtn");
+const menuOverlay  = document.getElementById("menuOverlay");
+const sideMenu     = document.getElementById("sideMenu");
+const logoutBtn    = document.getElementById("logoutBtn");
 
-// Elementlarni chaqirib olish
-const videoGrid = document.getElementById("videoGrid");
-const videoModal = document.getElementById("videoModal");
-const modalVideo = document.getElementById("modalVideo");
-const modalUserId = document.getElementById("modalUserId");
-const modalCaption = document.getElementById("modalCaption");
-const modalLikeCount = document.getElementById("modalLikeCount");
-const modalCommentCount = document.getElementById("modalCommentCount");
+const videoModal   = document.getElementById("videoModal");
+const modalBg      = document.getElementById("modalBg");
+const closeModal   = document.getElementById("closeModal");
+const modalVideo   = document.getElementById("modalVideo");
+const metaId       = document.getElementById("metaId");
+const metaCaption  = document.getElementById("metaCaption");
+const metaLikes    = document.getElementById("metaLikes");
+const metaComments = document.getElementById("metaComments");
+const shareBtn     = document.getElementById("shareBtn");
+const ownerActions = document.getElementById("ownerActions");
+const editBtn      = document.getElementById("editBtn");
+const deleteBtn    = document.getElementById("deleteBtn");
 
-const ownerMenuContainer = document.getElementById("ownerMenuContainer");
-const dropdownMenu = document.getElementById("dropdownMenu");
-const editModal = document.getElementById("editModal");
-const editCaptionInput = document.getElementById("editCaptionInput");
+const editModal    = document.getElementById("editModal");
+const editBg       = document.getElementById("editBg");
+const editInput    = document.getElementById("editInput");
+const cancelEdit   = document.getElementById("cancelEdit");
+const saveEdit     = document.getElementById("saveEdit");
 
-// 1. Videolarni va Statistikani Yuklash
-function loadProfileData() {
-    const postsRef = ref(db, 'posts');
-    
-    onValue(postsRef, (snapshot) => {
-        videoGrid.innerHTML = "";
-        myPostsData = {};
-        let totalLikes = 0;
-        let postCount = 0;
+let activePostId   = null;
+let activePostData = null;
 
-        if (!snapshot.exists()) {
-            videoGrid.innerHTML = `<div class="loading">Siz hali video joylamagansiz.</div>`;
-            document.getElementById("totalLikesCount").innerText = "0";
-            return;
-        }
+// ── PROFIL ──────────────────────────────────────────────
+profileUsername.textContent = "@" + (user.username || "anonim");
+profileId.textContent = user.id;
 
-        const allPosts = snapshot.val();
-        
-        // Faqat joriy foydalanuvchiga tegishli postlarni ajratib olamiz
-        Object.entries(allPosts).forEach(([id, post]) => {
-            if (String(post.userId) === String(user.id)) {
-                myPostsData[id] = post;
-                postCount++;
-                totalLikes += (post.likes || 0);
-
-                // Grid elementi tuzilishi
-                const gridItem = document.createElement("div");
-                gridItem.className = "grid-item";
-                gridItem.innerHTML = `<video src="${post.video_url}" muted preload="metadata"></video>`;
-                
-                // Bosilganda modal pleyerni ochish
-                gridItem.addEventListener("click", () => openVideoModal(id));
-                videoGrid.appendChild(gridItem);
-            }
-        });
-
-        if (postCount === 0) {
-            videoGrid.innerHTML = `<div class="loading">Siz hali video joylamagansiz.</div>`;
-        }
-
-        // Statistikani yangilash
-        document.getElementById("totalLikesCount").innerText = totalLikes;
-        // Obunachilar va obunalar uchun test ma'lumot (agar bazada bo'lmasa)
-        document.getElementById("followersCount").innerText = "2.6K";
-        document.getElementById("followingCount").innerText = "142";
-    });
+if (user.photo_url) {
+    profileAvatar.src = user.photo_url;
+} else {
+    profileAvatar.src =
+        "https://ui-avatars.com/api/?name=" +
+        encodeURIComponent(user.username || user.id) +
+        "&background=00ffff&color=0b0e14&size=200&bold=true";
 }
 
-// 2. Modal Oynani ochish va to'ldirish
-function openVideoModal(postId) {
-    selectedPostId = postId;
-    const post = myPostsData[postId];
-    if (!post) return;
+// Firebase dan subscriber/subscriptions yuklash
+get(ref(db, "users/" + user.id)).then(snap => {
+    if (snap.exists()) {
+        const d = snap.val();
+        subscribersCount.textContent  = d.subscribers  || 0;
+        subscriptionsCount.textContent= d.subscriptions|| 0;
+    }
+}).catch(() => {});
 
-    modalVideo.src = post.video_url;
-    modalUserId.innerText = `ID: ${post.userId}`;
-    modalCaption.innerText = post.caption || "";
-    modalLikeCount.innerText = post.likes || 0;
-    modalCommentCount.innerText = post.comments ? Object.keys(post.comments).length : 0;
+// ── VIDEOLAR ────────────────────────────────────────────
+onValue(ref(db, "posts"), snapshot => {
+    videosGrid.innerHTML = "";
 
-    // Tekshiruv: Agar video egasi o'zi bo'lsa 3 ta nuqtani ko'rsatish
-    if (String(post.userId) === String(user.id)) {
-        ownerMenuContainer.hidden = false;
-    } else {
-        ownerMenuContainer.hidden = true;
+    if (!snapshot.exists()) {
+        videosGrid.innerHTML = '<div class="no-videos">Hali video yo\'q</div>';
+        return;
     }
 
-    videoModal.hidden = false;
-    modalVideo.play().catch(() => {});
+    const all = snapshot.val();
+    const mine = Object.entries(all)
+        .map(([id, post]) => ({ id, ...post }))
+        .filter(p => String(p.userId) === String(user.id))
+        .reverse();
+
+    if (mine.length === 0) {
+        videosGrid.innerHTML = '<div class="no-videos">Hali video yo\'q</div>';
+        return;
+    }
+
+    mine.forEach(post => {
+        const thumb = document.createElement("div");
+        thumb.className = "video-thumb";
+        thumb.innerHTML =
+            '<img src="' + (post.thumbnail_url || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Crect fill='%23161b22'/%3E%3C/svg%3E") + '" alt="" ' +
+            'onerror="this.src=\'data:image/svg+xml,%3Csvg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 100 100\\\'%3E%3Crect fill=\\\'%23161b22\\\' width=\\\'100\\\' height=\\\'100\\\'/%3E%3Ctext x=\\\'50\\\' y=\\\'55\\\' text-anchor=\\\'middle\\\' font-size=\\\'30\\\' fill=\\\'%2300ffff\\\'%3E▶%3C/text%3E%3C/svg%3E\'">' +
+            '<div class="play-icon">▶</div>';
+        thumb.addEventListener("click", () => openVideoModal(post));
+        videosGrid.appendChild(thumb);
+    });
+});
+
+// ── MENU ────────────────────────────────────────────────
+menuBtn.addEventListener("click", () => {
+    sideMenu.classList.add("open");
+    menuOverlay.classList.add("show");
+});
+menuOverlay.addEventListener("click", closeMenu);
+logoutBtn.addEventListener("click", () => {
+    if (confirm("Chiqishni tasdiqlaysizmi?")) tg.close();
+});
+function closeMenu() {
+    sideMenu.classList.remove("open");
+    menuOverlay.classList.remove("show");
 }
 
-// Modalni yopish tizimi
+// ── VIDEO MODAL ─────────────────────────────────────────
+function openVideoModal(post) {
+    activePostId   = post.id;
+    activePostData = post;
+
+    modalVideo.src     = post.video_url || "";
+    metaId.textContent = post.id;
+    metaCaption.textContent = post.caption || "Tavsif yo'q";
+
+    const likesCount   = post.likes_users ? Object.keys(post.likes_users).length : (post.likes || 0);
+    const commentCount = post.comments   ? Object.keys(post.comments).length    : 0;
+    metaLikes.textContent    = likesCount;
+    metaComments.textContent = commentCount;
+
+    // Owner bo'lsa tahrirlash/o'chirish tugmalarini ko'rsat
+    if (String(post.userId) === String(user.id)) {
+        ownerActions.style.display = "flex";
+    } else {
+        ownerActions.style.display = "none";
+    }
+
+    videoModal.classList.add("show");
+}
+
 function closeVideoModal() {
-    videoModal.hidden = true;
+    videoModal.classList.remove("show");
     modalVideo.pause();
     modalVideo.src = "";
-    dropdownMenu.hidden = true;
+    activePostId   = null;
+    activePostData = null;
 }
 
-document.getElementById("closeModalBtn").addEventListener("click", closeVideoModal);
-document.getElementById("modalBackdrop").addEventListener("click", closeVideoModal);
+closeModal.addEventListener("click", closeVideoModal);
+modalBg.addEventListener("click", closeVideoModal);
 
-// 3. Uchta nuqta (Dropdown) menyu boshqaruvi
-document.getElementById("ownerMenuBtn").addEventListener("click", (e) => {
-    e.stopPropagation();
-    dropdownMenu.hidden = !dropdownMenu.hidden;
-});
-
-// 4. Videoni o'chirish mantiqi
-document.getElementById("deletePostBtn").addEventListener("click", async () => {
-    if (!selectedPostId) return;
-    
-    tg.showConfirm("Haqiqatdan ham ushbu videoni oʻchirib tashlamoqchimisiz?", async (confirmed) => {
-        if (confirmed) {
-            try {
-                const postRef = ref(db, `posts/${selectedPostId}`);
-                await remove(postRef);
-                closeVideoModal();
-                tg.showAlert("Video muvaffaqiyatli oʻchirildi!");
-            } catch (error) {
-                tg.showAlert("O'chirishda xatolik: " + error.message);
-            }
-        }
-    });
-});
-
-// 5. Videoni tahrirlash (Tavsifni o'zgartirish)
-document.getElementById("editPostBtn").addEventListener("click", () => {
-    const post = myPostsData[selectedPostId];
-    if (!post) return;
-
-    editCaptionInput.value = post.caption || "";
-    dropdownMenu.hidden = true;
-    editModal.hidden = false;
-});
-
-document.getElementById("cancelEditBtn").addEventListener("click", () => {
-    editModal.hidden = true;
-});
-
-document.getElementById("saveEditBtn").addEventListener("click", async () => {
-    const newCaption = editCaptionInput.value.trim();
-    if (!selectedPostId) return;
-
-    try {
-        const postRef = ref(db, `posts/${selectedPostId}`);
-        await update(postRef, { caption: newCaption });
-        
-        // Ekrandagi tekstlarni darhol yangilash
-        modalCaption.innerText = newCaption;
-        myPostsData[selectedPostId].caption = newCaption;
-        
-        editModal.hidden = true;
-        tg.showAlert("Tavsif yangilandi!");
-    } catch (error) {
-        tg.showAlert("Saqlashda xatolik: " + error.message);
+// Ulashish
+shareBtn.addEventListener("click", () => {
+    if (activePostData?.video_url) {
+        tg.openTelegramLink(
+            "https://t.me/share/url?url=" +
+            encodeURIComponent(activePostData.video_url) +
+            "&text=" + encodeURIComponent("Dexogram-da ko'ring!")
+        );
     }
 });
 
-// Ulashish (Share) tugmasi funksiyasi
-document.getElementById("modalShareBtn").addEventListener("click", () => {
-    if (!modalVideo.src) return;
-    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(modalVideo.src)}&text=Mening profilimdagi videoni tomosha qiling!`);
+// ── TAHRIRLASH ──────────────────────────────────────────
+editBtn.addEventListener("click", () => {
+    editInput.value = activePostData?.caption || "";
+    editModal.classList.add("show");
 });
 
-// Likening vizual ko'rinishi
-document.getElementById("modalLikeBtn").addEventListener("click", () => {
-    tg.showAlert("Ushbu videoga allaqachon layk bosgansiz!");
+cancelEdit.addEventListener("click", () => {
+    editModal.classList.remove("show");
+});
+editBg.addEventListener("click", () => {
+    editModal.classList.remove("show");
 });
 
-// Sahifa yuklanganda tizimni ishga tushirish
-window.onload = loadProfileData;
+saveEdit.addEventListener("click", async () => {
+    if (!activePostId) return;
+    const newCaption = editInput.value.trim();
+    saveEdit.textContent = "Saqlanmoqda...";
+    saveEdit.disabled = true;
+    try {
+        await update(ref(db, "posts/" + activePostId), { caption: newCaption });
+        metaCaption.textContent    = newCaption || "Tavsif yo'q";
+        activePostData.caption     = newCaption;
+        editModal.classList.remove("show");
+    } catch (e) {
+        alert("Xatolik: " + e.message);
+    } finally {
+        saveEdit.textContent = "Saqlash";
+        saveEdit.disabled = false;
+    }
+});
+
+// ── O'CHIRISH ───────────────────────────────────────────
+deleteBtn.addEventListener("click", async () => {
+    if (!activePostId) return;
+    if (!confirm("Bu videoni o'chirishni tasdiqlaysizmi?")) return;
+    deleteBtn.textContent = "O'chirilmoqda...";
+    deleteBtn.disabled = true;
+    try {
+        await remove(ref(db, "posts/" + activePostId));
+        closeVideoModal();
+    } catch (e) {
+        alert("Xatolik: " + e.message);
+        deleteBtn.textContent = "🗑️ O'chirish";
+        deleteBtn.disabled = false;
+    }
+});

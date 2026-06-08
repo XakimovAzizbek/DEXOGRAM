@@ -4,107 +4,109 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dexogram - Profil</title>
-    <link rel="stylesheet" href="home.css">
     <link rel="stylesheet" href="profile.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
 
-    <!-- Header qismi: Logotip va Sozlamalar (3 ta chiziq) -->
+    <!-- Header -->
     <header class="header">
-        <h1 class="logo">DEXOGRAM</h1>
-        <button class="settings-btn" id="settingsBtn">
-            <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        <h1 class="logo">PROFIL</h1>
+        <button class="menu-btn" id="menuBtn">
+            <span></span><span></span><span></span>
         </button>
     </header>
 
-    <!-- Profil ma'lumotlari bo'limi -->
-    <section class="profile-container">
-        <div class="profile-header-info">
-            <div class="profile-avatar" id="profileAvatar"></div>
-            <h2 class="profile-username" id="profileUsername">@username</h2>
-            <p class="profile-id" id="profileId">ID: 000000</p>
+    <!-- Settings Menyu (Yopiq) -->
+    <div class="overlay" id="menuOverlay"></div>
+    <div class="side-menu" id="sideMenu">
+        <a href="settings.html" class="side-item">⚙️ Sozlamalar</a>
+        <button class="side-item danger" id="logoutBtn">🚪 Chiqish</button>
+    </div>
+
+    <!-- Asosiy Kontent -->
+    <main>
+
+        <!-- Profil qismi -->
+        <div class="profile-section">
+            <img id="profileAvatar" class="avatar" src="" alt="avatar">
+            <div class="profile-info">
+                <div class="username" id="profileUsername">@username</div>
+                <div class="uid">ID: <b id="profileId">0</b></div>
+            </div>
         </div>
 
         <!-- Statistika -->
-        <div class="stats-container">
-            <div class="stat-item">
-                <span class="stat-count" id="followersCount">0</span>
-                <span class="stat-label">Obunachilar</span>
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-big" id="subscribersCount">0</div>
+                <div class="stat-small">Obunachilar</div>
             </div>
-            <div class="stat-item">
-                <span class="stat-count" id="followingCount">0</span>
-                <span class="stat-label">Obunalar</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-count" id="totalLikesCount">0</span>
-                <span class="stat-label">Jami Layklar</span>
+            <div class="stat-card">
+                <div class="stat-big" id="subscriptionsCount">0</div>
+                <div class="stat-small">Obunalar</div>
             </div>
         </div>
-    </section>
 
-    <!-- Foydalanuvchi videolari galereyasi -->
-    <main class="video-grid-container">
-        <h3 class="grid-title">Mening videolarim</h3>
-        <div class="video-grid" id="videoGrid">
-            <div class="loading">Videolar yuklanmoqda...</div>
+        <!-- Videolar -->
+        <div class="videos-wrap">
+            <div class="section-title">Videolar</div>
+            <div class="videos-grid" id="videosGrid">
+                <div class="no-videos">Videolar yuklanmoqda...</div>
+            </div>
         </div>
     </main>
 
-    <!-- Video ustiga bosilganda ochiladigan pleyer va ma'lumotlar oynasi (Modal) -->
-    <div class="video-modal" id="videoModal" hidden>
-        <div class="modal-backdrop" id="modalBackdrop"></div>
-        <div class="modal-content">
-            <button class="close-modal-btn" id="closeModalBtn">✕</button>
-            
-            <div class="modal-player-wrapper">
-                <video id="modalVideo" class="modal-video" loop playsinline></video>
-                
-                <!-- O'ng tarafdagi harakatlar tugmalari -->
-                <div class="modal-actions-right">
-                    <div class="action-item">
-                        <button class="modal-action-btn" id="modalLikeBtn">🤍</button>
-                        <span id="modalLikeCount">0</span>
-                    </div>
-                    <div class="action-item">
-                        <button class="modal-action-btn" id="modalCommentBtn">💬</button>
-                        <span id="modalCommentCount">0</span>
-                    </div>
-                    <div class="action-item">
-                        <button class="modal-action-btn" id="modalShareBtn">✈️</button>
-                    </div>
-                    <!-- Agar o'zining videosi bo'lsa chiqadigan 3 ta nuqta -->
-                    <div class="action-item" id="ownerMenuContainer" hidden>
-                        <button class="modal-action-btn" id="ownerMenuBtn">⋮</button>
-                        <div class="dropdown-menu" id="dropdownMenu" hidden>
-                            <button class="dropdown-item edit" id="editPostBtn">Taxrirlash</button>
-                            <button class="dropdown-item delete" id="deletePostBtn">Oʻchirish</button>
-                        </div>
-                    </div>
+    <!-- Video Modal (JS orqali ko'rinadi) -->
+    <div class="modal-overlay" id="videoModal">
+        <div class="modal-bg" id="modalBg"></div>
+        <div class="modal-box">
+            <button class="modal-close" id="closeModal">&times;</button>
+
+            <video id="modalVideo" controls playsinline></video>
+
+            <div class="modal-meta">
+                <div class="meta-id">ID: <span id="metaId"></span></div>
+                <div class="meta-caption" id="metaCaption"></div>
+            </div>
+
+            <div class="modal-stats">
+                <div class="ms-item">
+                    <div class="ms-num" id="metaLikes">0</div>
+                    <div class="ms-label">Layk</div>
+                </div>
+                <div class="ms-item">
+                    <div class="ms-num" id="metaComments">0</div>
+                    <div class="ms-label">Sharh</div>
                 </div>
             </div>
 
-            <!-- Video ma'lumotlari (pastki qismi) -->
-            <div class="modal-video-info">
-                <div class="modal-user-id" id="modalUserId">ID: --</div>
-                <div class="modal-caption" id="modalCaption">Tavsif yo'q</div>
+            <div class="modal-actions">
+                <button class="btn-share" id="shareBtn">✈️ Ulashish</button>
+            </div>
+
+            <!-- Faqat o'z videosi uchun (JS orqali ko'rsatiladi) -->
+            <div class="owner-actions" id="ownerActions">
+                <button class="btn-edit" id="editBtn">✏️ Tahrirlash</button>
+                <button class="btn-delete" id="deleteBtn">🗑️ O'chirish</button>
             </div>
         </div>
     </div>
 
-    <!-- Tahrirlash oynasi (Modal) -->
-    <div class="edit-modal" id="editModal" hidden>
-        <div class="edit-modal-content">
-            <h3>Video tavsifini tahrirlash</h3>
-            <textarea id="editCaptionInput" rows="4" placeholder="Yangi tavsifni yozing..."></textarea>
-            <div class="edit-modal-buttons">
-                <button id="cancelEditBtn" class="btn-secondary">Bekor qilish</button>
-                <button id="saveEditBtn" class="btn-primary">Saqlash</button>
+    <!-- Tahrirlash Modal (JS orqali ko'rinadi) -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-bg" id="editBg"></div>
+        <div class="modal-box small-box">
+            <h3>Tavsifni Tahrirlash</h3>
+            <textarea id="editInput" placeholder="Yangi tavsif yozing..."></textarea>
+            <div class="edit-btns">
+                <button class="btn-cancel" id="cancelEdit">Bekor</button>
+                <button class="btn-save" id="saveEdit">Saqlash</button>
             </div>
         </div>
     </div>
 
-    <!-- Pastki Navigatsiya paneli (home.html bilan bir xil dizaynda) -->
+    <!-- Bottom Nav -->
     <nav class="bottom-nav">
         <a href="home.html" class="nav-item">
             <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
