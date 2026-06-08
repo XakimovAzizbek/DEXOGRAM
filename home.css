@@ -1,4 +1,12 @@
-/* Umumiy sozlamalar */
+:root {
+    --bg-color: #0b0e14;
+    --card-bg: #161b22;
+    --text-color: #f0f6fc;
+    --accent-color: #00ffff; /* Neon Havorang-yashil */
+    --gray-color: #8b949e;
+    --border-color: #30363d;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -8,134 +16,157 @@
 }
 
 body {
-    background-color: var(--tg-theme-bg-color, #ffffff);
-    color: var(--tg-theme-text-color, #262626);
-    padding-top: 60px;
-    padding-bottom: 70px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    padding-bottom: 80px; /* Navigatsiya paneli yopib qo'ymasligi uchun */
     overflow-x: hidden;
 }
 
-/* Yuqori Header */
-.app-header {
-    position: fixed;
+/* Header */
+.header {
+    position: sticky;
     top: 0;
-    left: 0;
-    width: 100%;
-    height: 60px;
-    background-color: var(--tg-theme-bg-color, #ffffff);
-    border-bottom: 1px solid var(--tg-theme-hint-color, #dbdbdb);
+    z-index: 100;
+    background: rgba(11, 14, 20, 0.85);
+    backdrop-filter: blur(12px);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 16px;
-    z-index: 1000;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
 }
 
-.app-header .logo {
+.logo {
     font-size: 22px;
-    font-weight: bold;
-    font-style: italic;
-    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    background: linear-gradient(45deg, #00ffff, #ff007f);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
-.header-actions i {
-    font-size: 22px;
-    margin-left: 18px;
-    cursor: pointer;
-    color: var(--tg-theme-text-color, #262626);
+.user-badge {
+    font-size: 14px;
+    color: var(--accent-color);
+    background: rgba(0, 255, 255, 0.1);
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(0, 255, 255, 0.2);
 }
 
-/* Postlar Lentasi (Feed) */
+/* Feed Container */
 .feed-container {
     max-width: 500px;
     margin: 0 auto;
+    padding: 15px;
 }
 
+.loading {
+    text-align: center;
+    color: var(--gray-color);
+    margin-top: 50px;
+    font-size: 15px;
+}
+
+/* Post Card */
 .post-card {
-    background-color: var(--tg-theme-bg-color, #ffffff);
-    border-bottom: 1px solid var(--tg-theme-hint-color, #f0f0f0);
-    margin-bottom: 15px;
+    background: var(--card-bg);
+    border-radius: 16px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
 }
 
 .post-header {
     display: flex;
     align-items: center;
-    padding: 10px 16px;
+    padding: 12px 15px;
 }
 
-.user-avatar {
+.post-avatar {
     width: 36px;
     height: 36px;
+    background: linear-gradient(45deg, #00ffff, #ff007f);
     border-radius: 50%;
     margin-right: 10px;
-    object-fit: cover;
-    border: 1.5px solid #cc2366;
 }
 
-.username {
+.post-username {
     font-weight: 600;
     font-size: 14px;
 }
 
-.post-media video, .post-media img {
+.post-video {
     width: 100%;
-    max-height: 450px;
+    max-height: 400px;
     object-fit: cover;
     background-color: #000;
+    display: block;
 }
 
 .post-actions {
     display: flex;
-    justify-content: space-between;
-    padding: 12px 16px;
-}
-
-.left-actions .action-btn {
-    margin-right: 16px;
+    padding: 12px 15px 5px 15px;
+    gap: 15px;
 }
 
 .action-btn {
-    font-size: 22px;
+    background: none;
+    border: none;
     cursor: pointer;
-    transition: transform 0.1s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--text-color);
+    font-size: 14px;
 }
 
-.action-btn:active {
-    transform: scale(1.2);
+.action-btn svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
 }
 
-.fa-heart.liked {
-    color: #ed4956;
-    animation: pulse 0.3s linear;
+.action-btn.liked svg {
+    fill: #ff007f;
+    filter: drop-shadow(0 0 5px #ff007f);
 }
 
 .post-info {
-    padding: 0 16px 16px 16px;
+    padding: 0 15px 15px 15px;
+}
+
+.likes-count {
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.post-caption {
     font-size: 14px;
     line-height: 1.4;
 }
 
-.likes-count {
-    font-weight: 600;
-    margin-bottom: 4px;
+.post-caption span {
+    font-weight: bold;
+    margin-right: 5px;
 }
 
-/* Pastki Navigatsiya (Bottom Navbar) */
+/* Bottom Nav */
 .bottom-nav {
     position: fixed;
     bottom: 0;
     left: 0;
-    width: 100%;
-    height: 60px;
-    background-color: var(--tg-theme-secondary-bg-color, #ffffff);
-    border-top: 1px solid var(--tg-theme-hint-color, #dbdbdb);
+    right: 0;
+    height: 65px;
+    background: rgba(22, 27, 34, 0.9);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: space-around;
     align-items: center;
     z-index: 1000;
-    padding-bottom: env(safe-area-inset-bottom); /* iOS qurilmalari uchun xavfsiz hudud */
 }
 
 .nav-item {
@@ -143,28 +174,31 @@ body {
     flex-direction: column;
     align-items: center;
     text-decoration: none;
-    color: var(--tg-theme-hint-color, #8e8e8e);
-    width: 20%;
-    transition: color 0.2s;
-}
-
-.nav-item i {
-    font-size: 20px;
-    margin-bottom: 2px;
-}
-
-.nav-item span {
+    color: var(--gray-color);
     font-size: 10px;
+    transition: 0.2s;
 }
 
-/* Aktiv menyu holati */
-.nav-item.active {
-    color: var(--tg-theme-button-color, #0098ea); /* Telegram asosiy ko'k rangi yoki qora */
+.nav-item svg {
+    width: 22px;
+    height: 22px;
+    fill: currentColor;
+    margin-bottom: 3px;
 }
 
-/* Animatsiya */
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.3); }
-    100% { transform: scale(1); }
+.nav-item:hover, .nav-item.active {
+    color: var(--accent-color);
+}
+
+.upload-btn svg {
+    width: 28px;
+    height: 28px;
+    fill: var(--bg-color);
+    background: var(--accent-color);
+    border-radius: 50%;
+    padding: 4px;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+.upload-btn {
+    color: var(--accent-color);
 }
