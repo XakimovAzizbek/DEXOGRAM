@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dexogram - Profil</title>
+    <link rel="stylesheet" href="home.css">
+    <link rel="stylesheet" href="profile.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+
+    <!-- Header qismi: Logotip va Sozlamalar (3 ta chiziq) -->
+    <header class="header">
+        <h1 class="logo">DEXOGRAM</h1>
+        <button class="settings-btn" id="settingsBtn">
+            <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        </button>
+    </header>
+
+    <!-- Profil ma'lumotlari bo'limi -->
+    <section class="profile-container">
+        <div class="profile-header-info">
+            <div class="profile-avatar" id="profileAvatar"></div>
+            <h2 class="profile-username" id="profileUsername">@username</h2>
+            <p class="profile-id" id="profileId">ID: 000000</p>
+        </div>
+
+        <!-- Statistika -->
+        <div class="stats-container">
+            <div class="stat-item">
+                <span class="stat-count" id="followersCount">0</span>
+                <span class="stat-label">Obunachilar</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-count" id="followingCount">0</span>
+                <span class="stat-label">Obunalar</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-count" id="totalLikesCount">0</span>
+                <span class="stat-label">Jami Layklar</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Foydalanuvchi videolari galereyasi -->
+    <main class="video-grid-container">
+        <h3 class="grid-title">Mening videolarim</h3>
+        <div class="video-grid" id="videoGrid">
+            <div class="loading">Videolar yuklanmoqda...</div>
+        </div>
+    </main>
+
+    <!-- Video ustiga bosilganda ochiladigan pleyer va ma'lumotlar oynasi (Modal) -->
+    <div class="video-modal" id="videoModal" hidden>
+        <div class="modal-backdrop" id="modalBackdrop"></div>
+        <div class="modal-content">
+            <button class="close-modal-btn" id="closeModalBtn">✕</button>
+            
+            <div class="modal-player-wrapper">
+                <video id="modalVideo" class="modal-video" loop playsinline></video>
+                
+                <!-- O'ng tarafdagi harakatlar tugmalari -->
+                <div class="modal-actions-right">
+                    <div class="action-item">
+                        <button class="modal-action-btn" id="modalLikeBtn">🤍</button>
+                        <span id="modalLikeCount">0</span>
+                    </div>
+                    <div class="action-item">
+                        <button class="modal-action-btn" id="modalCommentBtn">💬</button>
+                        <span id="modalCommentCount">0</span>
+                    </div>
+                    <div class="action-item">
+                        <button class="modal-action-btn" id="modalShareBtn">✈️</button>
+                    </div>
+                    <!-- Agar o'zining videosi bo'lsa chiqadigan 3 ta nuqta -->
+                    <div class="action-item" id="ownerMenuContainer" hidden>
+                        <button class="modal-action-btn" id="ownerMenuBtn">⋮</button>
+                        <div class="dropdown-menu" id="dropdownMenu" hidden>
+                            <button class="dropdown-item edit" id="editPostBtn">Taxrirlash</button>
+                            <button class="dropdown-item delete" id="deletePostBtn">Oʻchirish</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video ma'lumotlari (pastki qismi) -->
+            <div class="modal-video-info">
+                <div class="modal-user-id" id="modalUserId">ID: --</div>
+                <div class="modal-caption" id="modalCaption">Tavsif yo'q</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tahrirlash oynasi (Modal) -->
+    <div class="edit-modal" id="editModal" hidden>
+        <div class="edit-modal-content">
+            <h3>Video tavsifini tahrirlash</h3>
+            <textarea id="editCaptionInput" rows="4" placeholder="Yangi tavsifni yozing..."></textarea>
+            <div class="edit-modal-buttons">
+                <button id="cancelEditBtn" class="btn-secondary">Bekor qilish</button>
+                <button id="saveEditBtn" class="btn-primary">Saqlash</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pastki Navigatsiya paneli (home.html bilan bir xil dizaynda) -->
+    <nav class="bottom-nav">
+        <a href="home.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span>Home</span>
+        </a>
+        <a href="search.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <span>Qidirish</span>
+        </a>
+        <a href="create.html" class="nav-item upload-btn">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            <span>Post</span>
+        </a>
+        <a href="reels.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg>
+            <span>Reels</span>
+        </a>
+        <a href="profile.html" class="nav-item active">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+            <span>Profil</span>
+        </a>
+    </nav>
+
+    <script type="module" src="profile.js"></script>
+</body>
+</html>

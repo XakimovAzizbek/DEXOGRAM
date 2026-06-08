@@ -1,0 +1,312 @@
+/* Profil Ma'lumotlari Stillari */
+.settings-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.settings-btn svg {
+    width: 26px;
+    height: 26px;
+    fill: currentColor;
+}
+
+.profile-container {
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(45deg, #00ffff, #ff007f);
+    border-radius: 50%;
+    margin: 0 auto 12px auto;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+}
+
+.profile-username {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.profile-id {
+    font-size: 13px;
+    color: var(--gray-color);
+}
+
+/* Statistika Bloklari */
+.stats-container {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+    background: var(--card-bg);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stat-count {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--accent-color);
+}
+
+.stat-label {
+    font-size: 11px;
+    color: var(--gray-color);
+    margin-top: 4px;
+}
+
+/* Video To'r (Grid) qismi */
+.video-grid-container {
+    padding: 15px;
+}
+
+.grid-title {
+    font-size: 14px;
+    color: var(--gray-color);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.video-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+}
+
+.grid-item {
+    position: relative;
+    width: 100%;
+    padding-top: 133%; /* 3:4 Vertikal pleyer proporsiyasi */
+    background: #000;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.grid-item video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* To'liq video ko'rish Modali */
+.video-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-backdrop {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+}
+
+.modal-content {
+    position: relative;
+    width: 100%;
+    max-width: 450px;
+    height: 100%;
+    max-height: 80vh;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    z-index: 2100;
+}
+
+.close-modal-btn {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: rgba(0,0,0,0.5);
+    border: none;
+    color: #fff;
+    font-size: 18px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    z-index: 2200;
+    cursor: pointer;
+}
+
+.modal-player-wrapper {
+    position: relative;
+    flex: 1;
+    background: #000;
+    display: flex;
+    align-items: center;
+}
+
+.modal-video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Modal ichidagi tugmalar */
+.modal-actions-right {
+    position: absolute;
+    right: 15px;
+    bottom: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    z-index: 2200;
+}
+
+.action-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 12px;
+    color: #fff;
+}
+
+.modal-action-btn {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Uchta nuqta dropdown menyu */
+.dropdown-menu {
+    position: absolute;
+    bottom: 50px;
+    right: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    width: 120px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    overflow: hidden;
+}
+
+.dropdown-item {
+    width: 100%;
+    padding: 10px;
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.dropdown-item:active {
+    background: rgba(255,255,255,0.1);
+}
+
+.dropdown-item.delete {
+    color: #ff453a;
+}
+
+/* Video matni */
+.modal-video-info {
+    padding: 15px;
+    background: var(--card-bg);
+    border-top: 1px solid var(--border-color);
+}
+
+.modal-user-id {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--accent-color);
+    margin-bottom: 5px;
+}
+
+.modal-caption {
+    font-size: 13px;
+    color: var(--text-color);
+}
+
+/* Tahrirlash Modali */
+.edit-modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+}
+
+.edit-modal-content {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 350px;
+}
+
+.edit-modal-content h3 {
+    margin-bottom: 12px;
+    font-size: 16px;
+}
+
+.edit-modal-content textarea {
+    width: 100%;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: white;
+    padding: 10px;
+    font-size: 14px;
+    resize: none;
+    margin-bottom: 15px;
+}
+
+.edit-modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.edit-modal-buttons button {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.btn-secondary { background: #30363d; color: white; }
+.btn-primary { background: var(--accent-color); color: #000; font-weight: bold; }
