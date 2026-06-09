@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dexogram - Video</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0e14;
+            --card-bg: #161b22;
+            --text-color: #f0f6fc;
+            --accent-color: #00ffff;
+            --gray-color: #8b949e;
+            --border-color: #30363d;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: #000;
+            color: #fff;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+        }
+
+        /* ---- VIDEO WRAPPER ---- */
+        .reel-post {
+            width: 100%;
+            height: 100vh;
+            height: 100dvh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+        }
+
+        .reel-video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            background: #000;
+        }
+
+        .audio-status-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+            background: rgba(0,0,0,0.6);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* ---- OVERLAY ---- */
+        .reel-overlay-left {
+            position: absolute;
+            bottom: 80px;
+            left: 15px;
+            right: 80px;
+            z-index: 10;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
+        }
+
+        .reel-user-id {
+            font-weight: bold;
+            font-size: 15px;
+            margin-bottom: 8px;
+            color: var(--accent-color);
+        }
+
+        .reel-caption {
+            font-size: 14px;
+            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+
+        /* ---- O'NG TUGMALAR ---- */
+        .reel-overlay-right {
+            position: absolute;
+            bottom: 90px;
+            right: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+            z-index: 10;
+        }
+
+        .action-btn {
+            background: rgba(22, 27, 34, 0.6);
+            backdrop-filter: blur(5px);
+            border: 1px solid var(--border-color);
+            color: white;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            cursor: pointer;
+            gap: 2px;
+            transition: transform 0.2s;
+        }
+
+        .action-btn span:first-child { font-size: 20px; }
+
+        .action-btn:active { transform: scale(0.9); }
+
+        .action-btn.liked {
+            border-color: #ff007f;
+            color: #ff007f;
+            box-shadow: 0 0 10px rgba(255,0,127,0.4);
+        }
+
+        /* ---- ORQAGA TUGMA ---- */
+        .back-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 20;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--border-color);
+            color: var(--accent-color);
+            font-size: 14px;
+            font-weight: 600;
+            padding: 8px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            backdrop-filter: blur(6px);
+        }
+
+        /* ---- YUKLANMOQDA ---- */
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            z-index: 999;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #30363d;
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-text {
+            color: var(--gray-color);
+            font-size: 15px;
+        }
+
+        .error-screen {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            z-index: 999;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .error-icon { font-size: 60px; }
+        .error-text { font-size: 16px; color: var(--gray-color); line-height: 1.5; }
+
+        /* ---- SHARHLAR MODALI ---- */
+        .comment-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 2000;
+        }
+
+        .comment-modal-backdrop {
+            position: absolute;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+        }
+
+        .comment-modal-content {
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 100%; height: 65%;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            z-index: 2100;
+        }
+
+        .comment-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        .comment-modal-header h3 { font-size: 16px; }
+
+        .close-btn {
+            background: none; border: none;
+            color: var(--text-color);
+            font-size: 24px; cursor: pointer;
+        }
+
+        .comments-list {
+            flex: 1; overflow-y: auto; padding: 5px 0;
+        }
+
+        .comment-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .comment-avatar {
+            width: 35px; height: 35px;
+            border-radius: 50%;
+            background: var(--border-color);
+        }
+
+        .comment-user {
+            font-weight: bold;
+            font-size: 12px;
+            color: var(--gray-color);
+            display: block;
+        }
+
+        .comment-text {
+            font-size: 14px;
+            color: var(--text-color);
+        }
+
+        .comment-input-area {
+            display: flex;
+            gap: 10px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 10px;
+        }
+
+        .comment-input-area input {
+            flex: 1;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 10px 15px;
+            color: white;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .comment-input-area button {
+            background: var(--accent-color);
+            border: none;
+            color: #000;
+            font-weight: bold;
+            border-radius: 20px;
+            padding: 0 18px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- Yuklanmoqda ekrani -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="spinner"></div>
+        <p class="loading-text">Video yuklanmoqda...</p>
+    </div>
+
+    <!-- Xatolik ekrani -->
+    <div class="error-screen hidden" id="errorScreen">
+        <div class="error-icon">😕</div>
+        <p class="error-text">Video topilmadi yoki o'chirilgan bo'lishi mumkin.</p>
+        <button class="back-btn" style="position:static;margin-top:10px;" onclick="window.location.href='home.html'">🏠 Bosh sahifaga</button>
+    </div>
+
+    <!-- Video sahifasi -->
+    <div id="reelWrapper" class="hidden">
+        <button class="back-btn" onclick="history.back()">← Orqaga</button>
+
+        <div class="reel-post" id="reelPost">
+            <video id="reelVideo" class="reel-video" loop playsinline webkit-playsinline muted></video>
+            <div class="audio-status-icon" id="audioIcon">🔊</div>
+
+            <div class="reel-overlay-left">
+                <div class="reel-user-id" id="reelUserId"></div>
+                <div class="reel-caption" id="reelCaption"></div>
+            </div>
+
+            <div class="reel-overlay-right">
+                <button class="action-btn" id="likeBtn">
+                    <span id="likeIcon">🤍</span>
+                    <span id="likeCount">0</span>
+                </button>
+                <button class="action-btn" id="commentBtn">
+                    <span>💬</span>
+                    <span id="commentCount">0</span>
+                </button>
+                <button class="action-btn" id="shareBtn">
+                    <span>✈️</span>
+                    <span>Ulashish</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sharhlar modali -->
+    <div class="comment-modal hidden" id="commentModal">
+        <div class="comment-modal-backdrop" id="modalBackdrop"></div>
+        <div class="comment-modal-content">
+            <div class="comment-modal-header">
+                <h3>Izohlar</h3>
+                <button class="close-btn" id="closeCommentBtn">✕</button>
+            </div>
+            <div class="comments-list" id="commentsList"></div>
+            <div class="comment-input-area">
+                <input type="text" id="commentInput" placeholder="Izoh yozing...">
+                <button id="sendCommentBtn">Yuborish</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="share_reels.js"></script>
+</body>
+</html>

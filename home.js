@@ -21,6 +21,13 @@ const db = getDatabase(app);
 const tg = window.Telegram.WebApp;
 tg.expand();
 
+// LINK ORQALI KIRGAN BO'LSA - share_reels.html GA YO'NALTIRISH
+// https://t.me/dexogram_bot/dexo?startapp=POST_ID
+const startParam = tg.initDataUnsafe?.start_param;
+if (startParam) {
+    window.location.href = "share_reels.html";
+}
+
 const user = tg.initDataUnsafe?.user || {
     id: "777",
     username: "DexoGram",
