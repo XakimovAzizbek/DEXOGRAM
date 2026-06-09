@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dexogram - Monetizatsiya</title>
+    <title>Dexogram - MONETIZATION</title>
     <link rel="stylesheet" href="monetization.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -11,25 +11,25 @@
 
     <header class="header">
         <a href="settings.html" class="back-btn">← Orqaga</a>
-        <h1 class="logo">MONETIZATSIYA</h1>
+        <h1 class="logo">MONETIZATION</h1>
     </header>
 
     <main class="container">
 
-        <!-- Status kartasi -->
+        <!-- Status card -->
         <div class="status-card" id="statusCard">
             <div class="status-icon" id="statusIcon">💰</div>
             <div class="status-title" id="statusTitle">Monetizatsiya holati</div>
             <div class="status-badge inactive" id="statusBadge">Faol emas</div>
         </div>
 
-        <!-- Shartlar kartasi -->
+        <!-- Terms card -->
         <div class="info-card">
-            <h3 class="card-title">📋 Monetizatsiya shartlari</h3>
+            <h3 class="card-title">📋 Monetization Terms</h3>
             <div class="condition-item">
                 <div class="condition-left">
                     <span class="condition-icon">❤️</span>
-                    <span class="condition-label">Jami layklar</span>
+                    <span class="condition-label">Total likes</span>
                 </div>
                 <div class="condition-right">
                     <span class="condition-current" id="totalLikesDisplay">0</span>
@@ -40,31 +40,31 @@
             </div>
         </div>
 
-        <!-- Statistika (monetizatsiya yoqilgandan keyin ko'rinadi) -->
+        <!-- Statistics (visible after monetization is enabled) -->
         <div class="stats-card hidden" id="statsCard">
-            <h3 class="card-title">📊 Statistika</h3>
+            <h3 class="card-title">📊 Statistics</h3>
 
             <div class="stat-row">
-                <span class="stat-label">👁 Jami ko'rishlar</span>
+                <span class="stat-label">👁 Total views</span>
                 <span class="stat-value" id="totalViewsDisplay">0</span>
             </div>
             <div class="stat-row">
-                <span class="stat-label">💵 Balans (USDT)</span>
+                <span class="stat-label">💵 Balance (USDT)</span>
                 <span class="stat-value accent" id="balanceDisplay">$0.00000</span>
             </div>
 
             <div class="rate-info">
                 <div class="rate-item">
-                    <span>1 ko'rish</span><span>= $0.00003</span>
+                    <span>1 views</span><span>= $0.000003</span>
                 </div>
                 <div class="rate-item">
-                    <span>10 ko'rish</span><span>= $0.0003</span>
+                    <span>10 views</span><span>= $0.00003</span>
                 </div>
                 <div class="rate-item">
-                    <span>100 ko'rish</span><span>= $0.003</span>
+                    <span>100 views</span><span>= $0.0003</span>
                 </div>
                 <div class="rate-item">
-                    <span>1000 ko'rish</span><span>= $0.03</span>
+                    <span>1000 views</span><span>= $0.003</span>
                 </div>
             </div>
 
@@ -73,20 +73,20 @@
             </button>
         </div>
 
-        <!-- Tekshirish tugmasi -->
+        <!-- Check button -->
         <div id="checkSection">
             <button class="btn-check" id="checkBtn">
-                🔍 Monetizatsiyani tekshirish
+                🔍 Check monetization
             </button>
-            <p class="check-note">Barcha videolaringizdagi jami layklar hisoblanadi</p>
+            <p class="check-note">The total number of likes across all your videos is</p>
         </div>
 
         <!-- Tekshirilmoqda overlay -->
         <div class="checking-overlay hidden" id="checkingOverlay">
             <div class="checking-box">
                 <div class="spinner"></div>
-                <p class="checking-text">Tekshirilmoqda...</p>
-                <p class="checking-sub">Firebase'dan ma'lumotlar olinmoqda</p>
+                <p class="checking-text">Checking...</p>
+                <p class="checking-sub">account is being verified</p>
             </div>
         </div>
 

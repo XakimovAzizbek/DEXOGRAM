@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dexogram - Profil</title>
+    <title>Dexogram - Profile</title>
     <link rel="stylesheet" href="profile.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -11,23 +11,23 @@
 
     <!-- Header -->
     <header class="header">
-        <h1 class="logo">PROFIL</h1>
+        <h1 class="logo">PROFILE</h1>
         <button class="menu-btn" id="menuBtn">
             <span></span><span></span><span></span>
         </button>
     </header>
 
-    <!-- Settings Menyu (Yopiq) -->
+    <!-- Settings Menu (Closed) -->
     <div class="overlay" id="menuOverlay"></div>
     <div class="side-menu" id="sideMenu">
-        <a href="settings.html" class="side-item">⚙️ Sozlamalar</a>
-        <button class="side-item danger" id="logoutBtn">🚪 Chiqish</button>
+        <a href="settings.html" class="side-item">⚙️ Settings</a>
+        <button class="side-item danger" id="logoutBtn">🚪 Exit</button>
     </div>
 
-    <!-- Asosiy Kontent -->
+    <!-- Main Content -->
     <main>
 
-        <!-- Profil qismi -->
+        <!-- Profile part -->
         <div class="profile-section">
             <img id="profileAvatar" class="avatar" src="" alt="avatar">
             <div class="profile-info">
@@ -36,23 +36,23 @@
             </div>
         </div>
 
-        <!-- Statistika -->
+        <!-- Statistics -->
         <div class="stats-row">
             <div class="stat-card">
                 <div class="stat-big" id="subscribersCount">0</div>
-                <div class="stat-small">Obunachilar</div>
+                <div class="stat-small">Subscribers</div>
             </div>
             <div class="stat-card">
                 <div class="stat-big" id="subscriptionsCount">0</div>
-                <div class="stat-small">Obunalar</div>
+                <div class="stat-small">Subscriptions</div>
             </div>
         </div>
 
-        <!-- Videolar -->
+        <!-- Videos -->
         <div class="videos-wrap">
-            <div class="section-title">Videolar</div>
+            <div class="section-title">Videos</div>
             <div class="videos-grid" id="videosGrid">
-                <div class="no-videos">Videolar yuklanmoqda...</div>
+                <div class="no-videos">Videos are loading...</div>
             </div>
         </div>
     </main>
@@ -73,11 +73,11 @@
             <div class="modal-stats">
                 <div class="ms-item">
                     <div class="ms-num" id="metaLikes">0</div>
-                    <div class="ms-label">Layk</div>
+                    <div class="ms-label">Like</div>
                 </div>
                 <div class="ms-item">
                     <div class="ms-num" id="metaComments">0</div>
-                    <div class="ms-label">Sharh</div>
+                    <div class="ms-label">Comment</div>
                 </div>
             </div>
 
@@ -87,8 +87,8 @@
 
             <!-- Faqat o'z videosi uchun (JS orqali ko'rsatiladi) -->
             <div class="owner-actions" id="ownerActions">
-                <button class="btn-edit" id="editBtn">✏️ Tahrirlash</button>
-                <button class="btn-delete" id="deleteBtn">🗑️ O'chirish</button>
+                <button class="btn-edit" id="editBtn">✏️ Edit</button>
+                <button class="btn-delete" id="deleteBtn">🗑️ Delete</button>
             </div>
         </div>
     </div>
@@ -97,11 +97,11 @@
     <div class="modal-overlay" id="editModal">
         <div class="modal-bg" id="editBg"></div>
         <div class="modal-box small-box">
-            <h3>Tavsifni Tahrirlash</h3>
-            <textarea id="editInput" placeholder="Yangi tavsif yozing..."></textarea>
+            <h3>Edit Description</h3>
+            <textarea id="editInput" placeholder="Write a new description..."></textarea>
             <div class="edit-btns">
-                <button class="btn-cancel" id="cancelEdit">Bekor</button>
-                <button class="btn-save" id="saveEdit">Saqlash</button>
+                <button class="btn-cancel" id="cancelEdit">Invalid</button>
+                <button class="btn-save" id="saveEdit">Save</button>
             </div>
         </div>
     </div>
@@ -114,7 +114,7 @@
         </a>
         <a href="search.html" class="nav-item">
             <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-            <span>Qidirish</span>
+            <span>Search</span>
         </a>
         <a href="create.html" class="nav-item upload-btn">
             <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
@@ -126,7 +126,7 @@
         </a>
         <a href="profile.html" class="nav-item active">
             <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
-            <span>Profil</span>
+            <span>Profile</span>
         </a>
     </nav>
 
