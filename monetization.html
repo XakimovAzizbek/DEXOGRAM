@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dexogram - Monetizatsiya</title>
+    <link rel="stylesheet" href="monetization.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+
+    <header class="header">
+        <a href="settings.html" class="back-btn">← Orqaga</a>
+        <h1 class="logo">MONETIZATSIYA</h1>
+    </header>
+
+    <main class="container">
+
+        <!-- Status kartasi -->
+        <div class="status-card" id="statusCard">
+            <div class="status-icon" id="statusIcon">💰</div>
+            <div class="status-title" id="statusTitle">Monetizatsiya holati</div>
+            <div class="status-badge inactive" id="statusBadge">Faol emas</div>
+        </div>
+
+        <!-- Shartlar kartasi -->
+        <div class="info-card">
+            <h3 class="card-title">📋 Monetizatsiya shartlari</h3>
+            <div class="condition-item">
+                <div class="condition-left">
+                    <span class="condition-icon">❤️</span>
+                    <span class="condition-label">Jami layklar</span>
+                </div>
+                <div class="condition-right">
+                    <span class="condition-current" id="totalLikesDisplay">0</span>
+                    <span class="condition-sep">/</span>
+                    <span class="condition-target">100</span>
+                    <span class="condition-check" id="likesCheck">✗</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistika (monetizatsiya yoqilgandan keyin ko'rinadi) -->
+        <div class="stats-card hidden" id="statsCard">
+            <h3 class="card-title">📊 Statistika</h3>
+
+            <div class="stat-row">
+                <span class="stat-label">👁 Jami ko'rishlar</span>
+                <span class="stat-value" id="totalViewsDisplay">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">💵 Balans (USDT)</span>
+                <span class="stat-value accent" id="balanceDisplay">$0.00000</span>
+            </div>
+
+            <div class="rate-info">
+                <div class="rate-item">
+                    <span>1 ko'rish</span><span>= $0.00003</span>
+                </div>
+                <div class="rate-item">
+                    <span>10 ko'rish</span><span>= $0.0003</span>
+                </div>
+                <div class="rate-item">
+                    <span>100 ko'rish</span><span>= $0.003</span>
+                </div>
+                <div class="rate-item">
+                    <span>1000 ko'rish</span><span>= $0.03</span>
+                </div>
+            </div>
+
+            <button class="btn-withdraw" onclick="window.location.href='withdraw.html'">
+                💳 Withdraw
+            </button>
+        </div>
+
+        <!-- Tekshirish tugmasi -->
+        <div id="checkSection">
+            <button class="btn-check" id="checkBtn">
+                🔍 Monetizatsiyani tekshirish
+            </button>
+            <p class="check-note">Barcha videolaringizdagi jami layklar hisoblanadi</p>
+        </div>
+
+        <!-- Tekshirilmoqda overlay -->
+        <div class="checking-overlay hidden" id="checkingOverlay">
+            <div class="checking-box">
+                <div class="spinner"></div>
+                <p class="checking-text">Tekshirilmoqda...</p>
+                <p class="checking-sub">Firebase'dan ma'lumotlar olinmoqda</p>
+            </div>
+        </div>
+
+    </main>
+
+    <script type="module" src="monetization.js"></script>
+</body>
+</html>

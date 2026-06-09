@@ -15,45 +15,29 @@
     </header>
 
     <main class="settings-container">
-        <div class="settings-section">
-            <h2>Umum</h2>
-            <div class="setting-item">
-                <label>
-                    <span>Qora Tema</span>
-                    <input type="checkbox" id="darkTheme" checked>
-                    <span class="toggle"></span>
-                </label>
-            </div>
-            <div class="setting-item">
-                <label>
-                    <span>Bildirishnomalar</span>
-                    <input type="checkbox" id="notifications" checked>
-                    <span class="toggle"></span>
-                </label>
-            </div>
+
+        <div class="menu-btn-group">
+
+            <button class="menu-btn verification" onclick="window.location.href='verification.html'">
+                <div class="menu-btn-icon">✅</div>
+                <div class="menu-btn-text">
+                    <span class="menu-btn-title">Account Verification</span>
+                    <span class="menu-btn-sub">Hisobingizni tasdiqlang</span>
+                </div>
+                <div class="menu-btn-arrow">›</div>
+            </button>
+
+            <button class="menu-btn monetization" onclick="window.location.href='monetization.html'">
+                <div class="menu-btn-icon">💰</div>
+                <div class="menu-btn-text">
+                    <span class="menu-btn-title">Monetization</span>
+                    <span class="menu-btn-sub">Daromad olishni boshlang</span>
+                </div>
+                <div class="menu-btn-arrow">›</div>
+            </button>
+
         </div>
 
-        <div class="settings-section">
-            <h2>Hisob</h2>
-            <div class="setting-item">
-                <label>
-                    <span>Email</span>
-                    <input type="email" id="emailInput" placeholder="Email kiriting">
-                </label>
-            </div>
-            <div class="setting-item">
-                <label>
-                    <span>Bio</span>
-                    <textarea id="bioInput" placeholder="O'zingiz haqida yozing"></textarea>
-                </label>
-            </div>
-            <button class="btn-save" id="saveSettingsBtn">Saqlash</button>
-        </div>
-
-        <div class="settings-section danger">
-            <h2>Xavfli Zona</h2>
-            <button class="btn-danger" id="deleteAccountBtn">Hisobni Oʻchirish</button>
-        </div>
     </main>
 
     <nav class="bottom-nav">

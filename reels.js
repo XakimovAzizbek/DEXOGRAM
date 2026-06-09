@@ -38,6 +38,9 @@ let userViewCount = 0;
 const AD_TRIGGER_COUNT = 9; // 9 ta post ko'rilgandan keyin keyingisi reklama bo'ladi
 let globalObserver = null; // Observerni dinamik yangilash uchun
 
+// Ko'rish uchun 2 soat cooldown (millisekund)
+const VIEW_COOLDOWN_MS = 2 * 60 * 60 * 1000;
+
 // Firebase'dan foydalanuvchining ko'rishlar sonini yuklash
 async function loadUserViewCount() {
     const userRef = ref(db, `users/${user.id}/viewCount`);
@@ -50,6 +53,50 @@ async function loadUserViewCount() {
         }
     } catch (e) {
         console.error("Hisoblagichni yuklashda xatolik:", e);
+    }
+}
+
+// =============================================
+// MONETIZATSIYA: Ko'rishni qayd qilish
+// Bitta foydalanuvchi bitta videoni 2 soatda 1 marta ko'rishi hisoblanadi
+// Post egasining monetizatsiyasi yoqiq bo'lsa totalViews oshadi
+// =============================================
+async function recordPostView(postId, viewerUserId) {
+    try {
+        const postSnap = await get(ref(db, `posts/${postId}`));
+        if (!postSnap.exists()) return;
+
+        const post = postSnap.val();
+        const postOwnerId = String(post.userId);
+
+        // Post egasining monetizatsiyasi yoqilganmi?
+        const monoSnap = await get(ref(db, `users/${postOwnerId}/monetization`));
+        if (!monoSnap.exists() || !monoSnap.val().enabled) return;
+
+        // Ko'ruvchining oxirgi ko'rish vaqtini tekshiramiz
+        const viewRef = ref(db, `posts/${postId}/post_views/${viewerUserId}`);
+        const viewSnap = await get(viewRef);
+
+        const now = Date.now();
+
+        if (viewSnap.exists()) {
+            const lastSeen = viewSnap.val().lastSeen || 0;
+            // 2 soat o'tmagan bo'lsa → hisoblamaymiz
+            if (now - lastSeen < VIEW_COOLDOWN_MS) return;
+        }
+
+        // Ko'rishni qayd qilamiz
+        await set(viewRef, { lastSeen: now });
+
+        // Post egasining totalViews ni oshiramiz
+        const monoData = monoSnap.val();
+        const newTotal = (monoData.totalViews || 0) + 1;
+        await update(ref(db, `users/${postOwnerId}/monetization`), {
+            totalViews: newTotal
+        });
+
+    } catch (e) {
+        console.error("Ko'rishni qayd qilishda xatolik:", e);
     }
 }
 
@@ -266,6 +313,9 @@ function handleIntersectionObserver() {
                         await update(ref(db, `users/${user.id}`), {
                             viewCount: userViewCount
                         });
+
+                        // Monetizatsiya uchun ko'rishni qayd qilamiz (2 soat cooldown bilan)
+                        recordPostView(currentPostId, String(user.id));
 
                         // KALIT MANTIQ: Agar hisoblagich 9 taga yetsa, reklamani oxiriga emas, 
                         // aynan hozir foydalanuvchi ko'rib turgan joriy postdan keyingi o'ringa (afterend) joylaymiz!
