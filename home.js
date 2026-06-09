@@ -1,6 +1,6 @@
 // 1. Firebase Modullarini CDN orqali import qilamiz
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, get, update, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, get, set, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 // 2. Sizning Firebase Konfiguratsiyangiz
 const firebaseConfig = {
@@ -19,26 +19,24 @@ const db = getDatabase(app);
 
 // 4. Telegram WebApp API sozlamalari
 const tg = window.Telegram.WebApp;
-tg.expand(); // Oynani to'liq ochish
+tg.expand();
 
-// Foydalanuvchini aniqlash (Telegramdan kirmasa, test rejim)
 const user = tg.initDataUnsafe?.user || {
-    id: "999999",
-    username: "Dexo_Test",
-    first_name: "Loyiha Sinovchisi"
+    id: "777",
+    username: "DexoGram",
+    first_name: "DEXOGRAM"
 };
 
-// Header-ga foydalanuvchi nomini yozish
 document.getElementById("userBadge").innerText = `@${user.username}`;
 
-// 5. Postlarni Realtime Database-dan yuklab olish funksiyasi
+// 5. Postlarni yuklash - faqat TOP 5 ta (eng ko'p layk + koment)
 async function loadFeed() {
     const feedContainer = document.getElementById("feedContainer");
     const postsRef = ref(db, 'posts');
 
     try {
         const snapshot = await get(postsRef);
-        feedContainer.innerHTML = ""; // "Yuklanmoqda..." yozuvini tozalash
+        feedContainer.innerHTML = "";
 
         if (!snapshot.exists()) {
             feedContainer.innerHTML = `<div class="loading">Hozircha hech qanday post yo'q. Birinchi bo'lib post joylang!</div>`;
@@ -46,20 +44,49 @@ async function loadFeed() {
         }
 
         const data = snapshot.val();
-        // Postlarni massivga o'tkazish va eng yangisini tepaga chiqarish
-        const postsArray = Object.keys(data).map(key => ({ id: key, ...data[key] })).reverse();
 
-        postsArray.forEach(post => {
+        // Har bir postning layk va koment sonini hisoblaymiz
+        // Reels bilan bir xil format: likes_users ob'ekti ishlatiladi
+        const postsArray = Object.keys(data).map(key => {
+            const post = data[key];
+
+            // Layklar likes_users ob'ektida saqlanadi (reels bilan bir xil)
+            const likesObj = post.likes_users || {};
+            const likesCount = Object.keys(likesObj).length;
+
+            // Komentlar soni
+            const commentsCount = post.comments ? Object.keys(post.comments).length : 0;
+
+            return {
+                id: key,
+                ...post,
+                likesCount,
+                commentsCount
+            };
+        });
+
+        // TOP 5 ta: eng ko'p layk + koment yig'gan postlar
+        const top5 = postsArray
+            .sort((a, b) => (b.likesCount + b.commentsCount) - (a.likesCount + a.commentsCount))
+            .slice(0, 5);
+
+        if (top5.length === 0) {
+            feedContainer.innerHTML = `<div class="loading">Hozircha post yo'q.</div>`;
+            return;
+        }
+
+        top5.forEach((post, index) => {
             const card = document.createElement("div");
             card.className = "post-card";
-            
-            // Foydalanuvchi ushbu postga oldin layk bosganmi yoki yo'qmi tekshirish
-            const hasLiked = post.liked_users && post.liked_users[user.id] ? "liked" : "";
+
+            // Foydalanuvchi bu postga layk bosganmi — likes_users dan tekshiramiz
+            const hasLiked = post.likes_users && post.likes_users[user.id] ? "liked" : "";
 
             card.innerHTML = `
                 <div class="post-header">
                     <div class="post-avatar"></div>
                     <div class="post-username">@${post.username || 'anonim'}</div>
+                    <div class="top-badge">#${index + 1} Top</div>
                 </div>
                 
                 <video class="post-video" src="${post.video_url}" controls loop playsinline></video>
@@ -71,12 +98,12 @@ async function loadFeed() {
                 </div>
                 
                 <div class="post-info">
-                    <div class="likes-count" id="likes-count-${post.id}">${post.likes || 0} ta layk</div>
+                    <div class="likes-count" id="likes-count-${post.id}">${post.likesCount} ta layk · ${post.commentsCount} ta izoh</div>
                     <div class="post-caption"><span>@${post.username || 'anonim'}</span> ${post.caption || ''}</div>
                 </div>
             `;
-            
-            // Layk tugmasiga bosish hodisasini biriktiramiz
+
+            // Layk tugmasi
             const likeBtn = card.querySelector(".action-btn");
             likeBtn.addEventListener("click", () => toggleLike(post.id, likeBtn));
 
@@ -89,35 +116,33 @@ async function loadFeed() {
     }
 }
 
-// 6. Realtime Database-da Layk bosish tizimi (Transaction bilan xavfsiz o'zgartirish)
+// 6. Layk bosish — reels bilan bir xil likes_users formatida
 async function toggleLike(postId, button) {
-    const postLikesRef = ref(db, `posts/${postId}`);
-    
+    const likeRef = ref(db, `posts/${postId}/likes_users/${user.id}`);
+    const likesCountEl = document.getElementById(`likes-count-${postId}`);
+
     try {
-        // Transaction birdaniga ko'p odam layk bossa ham chalkashmaslikni ta'minlaydi
-        await runTransaction(postLikesRef, (post) => {
-            if (post) {
-                if (!post.liked_users) {
-                    post.liked_users = {};
-                }
-                
-                if (post.liked_users[user.id]) {
-                    // Agar oldin layk bosgan bo'lsa -> laykni olib tashlaymiz
-                    post.likes = (post.likes || 1) - 1;
-                    delete post.liked_users[user.id];
-                    button.classList.remove("liked");
-                } else {
-                    // Agar birinchi marta bossa -> layk qo'shamiz
-                    post.likes = (post.likes || 0) + 1;
-                    post.liked_users[user.id] = true;
-                    button.classList.add("liked");
-                }
-                
-                // Ekrandagi sonni darhol yangilash
-                document.getElementById(`likes-count-${postId}`).innerText = `${post.likes} ta layk`;
-            }
-            return post;
-        });
+        const snapshot = await get(likeRef);
+
+        if (snapshot.exists()) {
+            // Laykni olib tashlaymiz
+            await set(likeRef, null);
+            button.classList.remove("liked");
+        } else {
+            // Layk qo'shamiz
+            await set(likeRef, true);
+            button.classList.add("liked");
+        }
+
+        // Yangilangan layk sonini Firebase'dan o'qib ekranda ko'rsatamiz
+        const postSnapshot = await get(ref(db, `posts/${postId}`));
+        if (postSnapshot.exists()) {
+            const post = postSnapshot.val();
+            const newLikesCount = Object.keys(post.likes_users || {}).length;
+            const commentsCount = post.comments ? Object.keys(post.comments).length : 0;
+            likesCountEl.innerText = `${newLikesCount} ta layk · ${commentsCount} ta izoh`;
+        }
+
     } catch (error) {
         console.error("Layk bosishda xatolik:", error);
     }
