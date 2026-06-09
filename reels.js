@@ -238,9 +238,19 @@ function setupVideoControls(postId) {
         loadComments(postId);
     });
 
-    shareBtn.addEventListener('click', () => {
-        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(video.src)}&text=${encodeURIComponent("Dexogram-da ajoyib videoni ko'ring!")}`);
-    });
+    // shareBtn voqeasini quyidagicha o'zgartiring:
+shareBtn.addEventListener('click', () => {
+    // Siz so'ragan maxsus Mini App havolasi formatini quramiz
+    // postId bu yerda Firebase'dagi postning unikal ID raqami (masalan: -O1abcde...)
+    const miniAppShareUrl = `https://t.me/dexogram_bot/dexo?startapp=${postId}`;
+    
+    // Matn yaratamiz
+    const shareText = "Dexogram-da ajoyib videoni ko'ring! 🎬";
+
+    // Telegram'ning rasmiy ulashish oynasini ochamiz
+    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(miniAppShareUrl)}&text=${encodeURIComponent(shareText)}`);
+});
+
 }
 
 // 5. Sharhlarni Firebase'dan yuklash (O'zgarishsiz qoldi)
