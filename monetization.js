@@ -28,7 +28,7 @@ const userId = String(user.id);
 const VIEW_COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 soat
 
 // 1 ta ko'rish narxi (USDT)
-const RATE_PER_VIEW = 0.00003;
+const RATE_PER_VIEW = 0.000003;
 
 // =============================================
 // SAHIFA YUKLANGANDA
