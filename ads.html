@@ -27,7 +27,7 @@
 </head>
 <body>
 
-    <div id="adStatus" class="loading-ads">Reklama yuklanmoqda...</div>
+    <div id="adStatus" class="loading-ads">Loading advertisement...</div>
 
     <script>
         // Adsgram Block ID ingizni shu yerga yozasiz
@@ -37,10 +37,10 @@
         window.onload = function() {
             AdController.show().then((result) => {
                 // Reklama muvaffaqiyatli ko'rsatildi
-                document.getElementById("adStatus").innerText = "Keyingi videoga scroll qiling ⬇️";
+                document.getElementById("adStatus").innerText = "Scroll to the next video ⬇️";
             }).catch((result) => {
                 // Reklama yuklanishda xatolik bo'lsa
-                document.getElementById("adStatus").innerText = "Reklama yuklanmadi. Davom etish uchun scroll qiling ⬇️";
+                document.getElementById("adStatus").innerText = "Ad failed to load. Scroll to continue. ⬇️";
                 console.error("Adsgram xatolik:", result);
             });
         };

@@ -73,7 +73,7 @@ async function loadPageData() {
         }
 
     } catch (e) {
-        console.error("Sahifa yuklanishida xatolik:", e);
+        console.error("Error loading page:", e);
     }
 }
 
@@ -83,9 +83,9 @@ async function loadPageData() {
 function showActiveState(monoData) {
     // Status badge
     document.getElementById("statusIcon").textContent = "🏆";
-    document.getElementById("statusTitle").textContent = "Monetizatsiya faol!";
+    document.getElementById("statusTitle").textContent = "Monetization is active.!";
     const badge = document.getElementById("statusBadge");
-    badge.textContent = "✅ Faol";
+    badge.textContent = "✅ Active";
     badge.className = "status-badge active";
 
     // Stats kartasini ko'rsatish
@@ -132,7 +132,7 @@ document.getElementById("checkBtn").addEventListener("click", async () => {
         if (!postsSnap.exists()) {
             overlay.classList.add("hidden");
             btn.disabled = false;
-            showAlert("❌", "Hech qanday post topilmadi!");
+            showAlert("❌", "No posts found.!");
             return;
         }
 
@@ -150,7 +150,7 @@ document.getElementById("checkBtn").addEventListener("click", async () => {
 
         // Shart bajarilganmi?
         if (totalLikes < 100) {
-            showAlert("❌", `Siz hali ${totalLikes} ta layk yig'gangansiz. Monetizatsiya uchun kamida 100 ta layk kerak!`);
+            showAlert("❌", `You have collected ${totalLikes} likes so far. At least 100 likes are needed for monetization!`);
             btn.disabled = false;
             return;
         }
@@ -158,7 +158,7 @@ document.getElementById("checkBtn").addEventListener("click", async () => {
         // Monetizatsiya allaqachon yoqilganmi?
         const monoSnap = await get(ref(db, `users/${userId}/monetization`));
         if (monoSnap.exists() && monoSnap.val().enabled) {
-            showAlert("✅", "Monetizatsiya allaqachon yoqilgan!");
+            showAlert("✅", "Monetization is already enabled.!");
             showActiveState(monoSnap.val());
             btn.disabled = false;
             return;
@@ -172,14 +172,14 @@ document.getElementById("checkBtn").addEventListener("click", async () => {
             balance: 0
         });
 
-        showAlert("🎉", "Tabriklaymiz! Monetizatsiya muvaffaqiyatli yoqildi!");
+        showAlert("🎉", "Congratulations! Monetization has been successfully enabled.!");
         showActiveState({ enabled: true, totalViews: 0 });
 
     } catch (e) {
         console.error("Tekshirishda xatolik:", e);
         overlay.classList.add("hidden");
         btn.disabled = false;
-        showAlert("⚠️", "Xatolik yuz berdi. Qaytadan urinib ko'ring.");
+        showAlert("⚠️", "An error occurred. Please try again..");
     }
 });
 
@@ -266,6 +266,6 @@ export async function recordPostView(postId, viewerUserId) {
         });
 
     } catch (e) {
-        console.error("Ko'rishni qayd qilishda xatolik:", e);
+        console.error("Error while recording view:", e);
     }
 }

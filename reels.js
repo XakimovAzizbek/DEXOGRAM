@@ -52,7 +52,7 @@ async function loadUserViewCount() {
             userViewCount = 0;
         }
     } catch (e) {
-        console.error("Hisoblagichni yuklashda xatolik:", e);
+        console.error("Error loading counter:", e);
     }
 }
 
@@ -96,7 +96,7 @@ async function recordPostView(postId, viewerUserId) {
         });
 
     } catch (e) {
-        console.error("Ko'rishni qayd qilishda xatolik:", e);
+        console.error("Error while recording view:", e);
     }
 }
 
@@ -176,7 +176,7 @@ function insertAdCardAfterElement(element) {
             <iframe src="ads.html" class="ad-iframe" style="width:100%; height:100%; border:none;"></iframe>
             <div class="reel-overlay-left" style="bottom: 80px; z-index: 999;">
                 <div class="reel-caption" style="background:rgba(0,0,0,0.7); padding:8px 12px; border-radius:8px; font-weight:bold; color:#00ffff;">
-                    📢 Homiylik reklamsi (Adsgram)
+                    📢 Sponsored advertising (Adsgram)
                 </div>
             </div>
         </div>
@@ -302,7 +302,7 @@ function handleIntersectionObserver() {
 
                 if (entry.isIntersecting) {
                     video.muted = globalMuted;
-                    video.play().catch(err => console.log("Avto-ijro bloklandi"));
+                    video.play().catch(err => console.log("Auto-play blocked"));
 
                     // Faqat foydalanuvchi yangi postga scroll qilgandagina hisoblaymiz
                     if (lastViewedPostId !== currentPostId) {
@@ -330,7 +330,7 @@ function handleIntersectionObserver() {
             // Agar ko'rinayotgan element REKLAMA POSTI bo'lsa
             else if (entry.target.classList.contains('ad-post')) {
                 if (entry.isIntersecting) {
-                    console.log("Foydalanuvchi reklama postini ko'rmoqda.");
+                    console.log("User is viewing an advertising post.");
                     
                     // Reklama postiga o'tishi bilan Firebase hisoblagichini nollaymiz
                     userViewCount = 0;

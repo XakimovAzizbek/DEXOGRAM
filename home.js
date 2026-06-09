@@ -39,7 +39,7 @@ async function loadFeed() {
         feedContainer.innerHTML = "";
 
         if (!snapshot.exists()) {
-            feedContainer.innerHTML = `<div class="loading">Hozircha hech qanday post yo'q. Birinchi bo'lib post joylang!</div>`;
+            feedContainer.innerHTML = `<div class="loading">There are no posts yet. Be the first to post.!</div>`;
             return;
         }
 

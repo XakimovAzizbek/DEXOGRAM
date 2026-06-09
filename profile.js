@@ -85,7 +85,7 @@ onValue(ref(db, "posts"), snapshot => {
     videosGrid.innerHTML = "";
 
     if (!snapshot.exists()) {
-        videosGrid.innerHTML = '<div class="no-videos">Hali video yo\'q</div>';
+        videosGrid.innerHTML = '<div class="no-videos">No videos yet.</div>';
         return;
     }
 
@@ -96,7 +96,7 @@ onValue(ref(db, "posts"), snapshot => {
         .reverse();
 
     if (mine.length === 0) {
-        videosGrid.innerHTML = '<div class="no-videos">Hali video yo\'q</div>';
+        videosGrid.innerHTML = '<div class="no-videos">No videos yet.</div>';
         return;
     }
 
@@ -119,7 +119,7 @@ menuBtn.addEventListener("click", () => {
 });
 menuOverlay.addEventListener("click", closeMenu);
 logoutBtn.addEventListener("click", () => {
-    if (confirm("Chiqishni tasdiqlaysizmi?")) tg.close();
+    if (confirm("Would you confirm the exit??")) tg.close();
 });
 function closeMenu() {
     sideMenu.classList.remove("open");
@@ -133,7 +133,7 @@ function openVideoModal(post) {
 
     modalVideo.src     = post.video_url || "";
     metaId.textContent = post.id;
-    metaCaption.textContent = post.caption || "Tavsif yo'q";
+    metaCaption.textContent = post.caption || "No description";
 
     const likesCount   = post.likes_users ? Object.keys(post.likes_users).length : (post.likes || 0);
     const commentCount = post.comments   ? Object.keys(post.comments).length    : 0;
@@ -167,7 +167,7 @@ shareBtn.addEventListener("click", () => {
         tg.openTelegramLink(
             "https://t.me/share/url?url=" +
             encodeURIComponent(activePostData.video_url) +
-            "&text=" + encodeURIComponent("Dexogram-da ko'ring!")
+            "&text=" + encodeURIComponent("View on Dexogram!")
         );
     }
 });
@@ -188,17 +188,17 @@ editBg.addEventListener("click", () => {
 saveEdit.addEventListener("click", async () => {
     if (!activePostId) return;
     const newCaption = editInput.value.trim();
-    saveEdit.textContent = "Saqlanmoqda...";
+    saveEdit.textContent = "Saving...";
     saveEdit.disabled = true;
     try {
         await update(ref(db, "posts/" + activePostId), { caption: newCaption });
-        metaCaption.textContent    = newCaption || "Tavsif yo'q";
+        metaCaption.textContent    = newCaption || "No description";
         activePostData.caption     = newCaption;
         editModal.classList.remove("show");
     } catch (e) {
-        alert("Xatolik: " + e.message);
+        alert("Error: " + e.message);
     } finally {
-        saveEdit.textContent = "Saqlash";
+        saveEdit.textContent = "Save";
         saveEdit.disabled = false;
     }
 });
@@ -206,15 +206,15 @@ saveEdit.addEventListener("click", async () => {
 // ── O'CHIRISH ───────────────────────────────────────────
 deleteBtn.addEventListener("click", async () => {
     if (!activePostId) return;
-    if (!confirm("Bu videoni o'chirishni tasdiqlaysizmi?")) return;
-    deleteBtn.textContent = "O'chirilmoqda...";
+    if (!confirm("Are you sure you want to delete this video??")) return;
+    deleteBtn.textContent = "Deleting...";
     deleteBtn.disabled = true;
     try {
         await remove(ref(db, "posts/" + activePostId));
         closeVideoModal();
     } catch (e) {
-        alert("Xatolik: " + e.message);
-        deleteBtn.textContent = "🗑️ O'chirish";
+        alert("Error: " + e.message);
+        deleteBtn.textContent = "🗑️ Delete";
         deleteBtn.disabled = false;
     }
 });

@@ -55,7 +55,7 @@ async function burchakliQidiruv() {
                 topilganUser = {
                     id: post.userId,
                     username: post.username || "anonim",
-                    first_name: post.first_name || "Dexogram Foydalanuvchisi",
+                    first_name: post.first_name || "Dexogram User",
                     // Agar bazada rasm bo'lsa olinadi, bo'lmasa standart rasm qo'yiladi
                     avatar: post.user_avatar || "https://www.w3schools.com/howto/img_avatar.png"
                 };
@@ -82,12 +82,12 @@ async function burchakliQidiruv() {
             });
 
         } else {
-            resultsContainer.innerHTML = `<div class="no-results">Natija topilmadi.<br>Bu ID egasi Dexogramda mavjud emas!</div>`;
+            resultsContainer.innerHTML = `<div class="no-results">No results found..<br>This ID holder does not exist on Dexogram!</div>`;
         }
 
     } catch (error) {
-        console.error("Qidiruvda xato:", error);
-        resultsContainer.innerHTML = `<div class="no-results" style="color:red;">Xatolik yuz berdi. Qayta urinib ko'ring.</div>`;
+        console.error("Search error:", error);
+        resultsContainer.innerHTML = `<div class="no-results" style="color:red;">An error occurred. Please try again..</div>`;
     }
 }
 

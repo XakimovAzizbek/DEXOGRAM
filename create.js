@@ -70,10 +70,10 @@ shareBtn.addEventListener("click", async () => {
     const uploadUrl = `https://api.github.com/repos/${OWNER}/${REPO}/contents/videos/${unikalFileName}`;
 
     try {
-        statusText.innerText = "1/2: Video formatlanmoqda...";
+        statusText.innerText = "1/2: Formatting video...";
         const base64Content = await fileToBase64(selectedFile);
 
-        statusText.innerText = "2/2: GitHub-ga yuklanmoqda...";
+        statusText.innerText = "2/2: loading...";
 
         // KALIT QISM: JSON ichida 'encoding: "base64"' parametrini majburiy beramiz!
         const uploadResponse = await fetch(uploadUrl, {
@@ -97,7 +97,7 @@ shareBtn.addEventListener("click", async () => {
         // To'g'ridan-to'g'ri xom (raw) havola formatini quramiz
         const finalVideoUrl = `https://raw.githubusercontent.com/${OWNER}/${REPO}/main/videos/${unikalFileName}`;
 
-        statusText.innerText = "Firebase-ga yozilmoqda...";
+        statusText.innerText = "being written...";
 
         const postsListRef = ref(db, 'posts');
         const newPostRef = push(postsListRef);
@@ -112,7 +112,7 @@ shareBtn.addEventListener("click", async () => {
             timestamp: Date.now()
         });
 
-        tg.showAlert("Post muvaffaqiyatli ulashildi!", () => {
+        tg.showAlert("Post shared successfully✅!", () => {
             window.location.href = "home.html";
         });
 
@@ -120,6 +120,6 @@ shareBtn.addEventListener("click", async () => {
         console.error(error);
         statusContainer.hidden = true;
         shareBtn.disabled = false;
-        tg.showAlert("Xatolik yuz berdi: " + error.message);
+        tg.showAlert("An error occurred❌: " + error.message);
     }
 });
