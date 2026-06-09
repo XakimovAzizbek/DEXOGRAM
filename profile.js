@@ -17,9 +17,9 @@ const tg = window.Telegram.WebApp;
 tg.expand();
 
 const user = tg.initDataUnsafe?.user || {
-    id: "999999",
-    username: "Dexo_Test",
-    first_name: "Test User",
+    id: "777",
+    username: "DexoGram",
+    first_name: "DEXOGRAM",
     photo_url: null
 };
 

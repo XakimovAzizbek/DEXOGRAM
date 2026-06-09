@@ -22,9 +22,9 @@ tg.expand();
 
 // Get current user
 const user = tg.initDataUnsafe?.user || {
-    id: "999999",
-    username: "Dexo_Test",
-    first_name: "Loyiha Sinovchisi"
+    id: "777",
+    username: "DexoGram",
+    first_name: "DEXOGRAM"
 };
 
 // DOM Elements
