@@ -31,15 +31,90 @@ const commentInput = document.getElementById("commentInput");
 const sendCommentBtn = document.getElementById("sendCommentBtn");
 
 let activeCommentPostId = null;
-let globalMuted = true; // Sukut bo'yicha videolar ovozsiz boshlanadi
+let globalMuted = true;
 
 // REKLAMA MANTIQI UCHUN O'ZGARUVCHILAR
 let userViewCount = 0; 
-const AD_TRIGGER_COUNT = 9; // 9 ta post ko'rilgandan keyin keyingisi reklama bo'ladi
-let globalObserver = null; // Observerni dinamik yangilash uchun
+const AD_TRIGGER_COUNT = 9;
+let globalObserver = null;
 
 // Ko'rish uchun 2 soat cooldown (millisekund)
 const VIEW_COOLDOWN_MS = 2 * 60 * 60 * 1000;
+
+// =============================================
+// YANGI: DexoGram (ID:777) videolari uchun
+// maxsus layk animatsiyasi CSS — bir marta inject
+// =============================================
+(function injectDexoAnimStyle() {
+    if (document.getElementById('dexo-like-style')) return;
+    const style = document.createElement('style');
+    style.id = 'dexo-like-style';
+    style.textContent = `
+        @keyframes dexoLikePop {
+            0%   { transform: translate(-50%, -50%) scale(0) rotate(-20deg); opacity: 1; }
+            40%  { transform: translate(-50%, -50%) scale(1.6) rotate(10deg); opacity: 1; }
+            65%  { transform: translate(-50%, -50%) scale(1.1) rotate(-5deg); opacity: 1; }
+            80%  { transform: translate(-50%, -50%) scale(1.3) rotate(0deg);  opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0.5) rotate(0deg);  opacity: 0; }
+        }
+        @keyframes dexoLikeIconPop {
+            0%   { transform: scale(1); }
+            30%  { transform: scale(0.6); }
+            60%  { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        .dexo-like-img {
+            position: absolute;
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            pointer-events: none;
+            z-index: 9999;
+            animation: dexoLikePop 0.7s cubic-bezier(.36,.07,.19,.97) forwards;
+        }
+        .dexo-icon-pop {
+            animation: dexoLikeIconPop 0.4s ease forwards !important;
+        }
+    `;
+    document.head.appendChild(style);
+})();
+
+// =============================================
+// YANGI: DexoGram layk animatsiyasini ishga tushirish
+// faqat postOwnerId === "777" bo'lganda chaqiriladi
+// =============================================
+function playDexoLikeAnimation(likeBtn) {
+    // Eski animatsiyalarni tozalaymiz
+    likeBtn.querySelectorAll('.dexo-like-img').forEach(el => el.remove());
+
+    // dexogram.png rasm yaratamiz
+    const img = document.createElement('img');
+    img.src = 'https://xakimovazizbek.github.io/DEXOGRAM/dexogram.png';
+    img.className = 'dexo-like-img';
+    img.draggable = false;
+
+    // Tugma relative bo'lishi kerak
+    likeBtn.style.position = 'relative';
+    likeBtn.style.overflow = 'visible';
+    likeBtn.appendChild(img);
+
+    // Tugmadagi ikonkani ham qisqacha "pop" qilishini
+    const iconEl = likeBtn.querySelector('.icon');
+    if (iconEl) {
+        iconEl.classList.remove('dexo-icon-pop');
+        void iconEl.offsetWidth; // reflow — animatsiyani qayta boshlash uchun
+        iconEl.classList.add('dexo-icon-pop');
+    }
+
+    // 700ms keyin rasm o'chiriladi
+    img.addEventListener('animationend', () => {
+        img.remove();
+        if (iconEl) iconEl.classList.remove('dexo-icon-pop');
+    });
+}
 
 // Firebase'dan foydalanuvchining ko'rishlar sonini yuklash
 async function loadUserViewCount() {
@@ -58,8 +133,6 @@ async function loadUserViewCount() {
 
 // =============================================
 // MONETIZATSIYA: Ko'rishni qayd qilish
-// Bitta foydalanuvchi bitta videoni 2 soatda 1 marta ko'rishi hisoblanadi
-// Post egasining monetizatsiyasi yoqiq bo'lsa totalViews oshadi
 // =============================================
 async function recordPostView(postId, viewerUserId) {
     try {
@@ -69,11 +142,9 @@ async function recordPostView(postId, viewerUserId) {
         const post = postSnap.val();
         const postOwnerId = String(post.userId);
 
-        // Post egasining monetizatsiyasi yoqilganmi?
         const monoSnap = await get(ref(db, `users/${postOwnerId}/monetization`));
         if (!monoSnap.exists() || !monoSnap.val().enabled) return;
 
-        // Ko'ruvchining oxirgi ko'rish vaqtini tekshiramiz
         const viewRef = ref(db, `posts/${postId}/post_views/${viewerUserId}`);
         const viewSnap = await get(viewRef);
 
@@ -81,14 +152,11 @@ async function recordPostView(postId, viewerUserId) {
 
         if (viewSnap.exists()) {
             const lastSeen = viewSnap.val().lastSeen || 0;
-            // 2 soat o'tmagan bo'lsa → hisoblamaymiz
             if (now - lastSeen < VIEW_COOLDOWN_MS) return;
         }
 
-        // Ko'rishni qayd qilamiz
         await set(viewRef, { lastSeen: now });
 
-        // Post egasining totalViews ni oshiramiz
         const monoData = monoSnap.val();
         const newTotal = (monoData.totalViews || 0) + 1;
         await update(ref(db, `users/${postOwnerId}/monetization`), {
@@ -104,14 +172,14 @@ async function recordPostView(postId, viewerUserId) {
 const postsRef = ref(db, 'posts');
 
 async function initReels() {
-    await loadUserViewCount(); // Birinchi bo'lib Firebase'dan hisoblagichni o'qiymiz
+    await loadUserViewCount();
 
     get(postsRef).then((snapshot) => {
         reelsContainer.innerHTML = "";
         const data = snapshot.val();
         if (!data) return;
 
-        // Postlarni random (tasodifiy) tartibda chiqarish — Fisher-Yates shuffle
+        // Postlarni random tartibda chiqarish — Fisher-Yates shuffle
         const postsArray = Object.entries(data);
         for (let i = postsArray.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -125,8 +193,9 @@ async function initReels() {
             const likeIcon = likesObj[user.id] ? "❤️" : "🤍";
             const commentsCount = post.comments ? Object.keys(post.comments).length : 0;
 
+            // data-owner-id qo'shamiz — layk animatsiyasi uchun kerak
             const reelHTML = `
-                <div class="reel-post real-video-post" id="post_${postId}" data-post-id="${postId}">
+                <div class="reel-post real-video-post" id="post_${postId}" data-post-id="${postId}" data-owner-id="${post.userId}">
                     <video src="${post.video_url}" class="reel-video" loop playsinline webkit-playsinline muted preload="auto"></video>
                     
                     <div class="audio-status-icon">🔊</div>
@@ -154,12 +223,9 @@ async function initReels() {
             `;
             reelsContainer.insertAdjacentHTML('beforeend', reelHTML);
             setupVideoControls(postId);
-            // Verified badge: post egasi tasdiqlangan bo'lsa verification.png chiqaradi
             checkVerifiedBadge(postId, String(post.userId));
         });
 
-        // AGAR FOYDALANUVCHI ALLAQACHON 9 TA POST KO'RIB KIRGAN BO'LSA
-        // Uni birinchi turgan postdan keyinoq ko'rinadigan qilib joylaymiz (oxirida emas!)
         if (userViewCount >= AD_TRIGGER_COUNT) {
             const firstPost = reelsContainer.querySelector('.real-video-post');
             if (firstPost) {
@@ -171,9 +237,8 @@ async function initReels() {
     });
 }
 
-// Reklamani aynan kerakli elementdan (postdan) keyingi o'ringa joylashtirish funksiyasi
+// Reklamani aynan kerakli elementdan keyingi o'ringa joylashtirish
 function insertAdCardAfterElement(element) {
-    // Eski reklama bo'lsa o'chiramiz, chalkashlik bo'lmasligi uchun
     const oldAd = document.getElementById('adsgram_post');
     if (oldAd) oldAd.remove();
     
@@ -189,7 +254,6 @@ function insertAdCardAfterElement(element) {
     `;
     element.insertAdjacentHTML('afterend', adHTML);
     
-    // Agar observer ishlayotgan bo'lsa, yangi reklamani ham kuzatuvga qo'shamiz
     const newAd = document.getElementById('adsgram_post');
     if (newAd && globalObserver) {
         globalObserver.observe(newAd);
@@ -213,7 +277,7 @@ async function checkVerifiedBadge(postId, ownerId) {
     } catch (e) {}
 }
 
-// 4. Video boshqaruv datchiklari (O'zgarishsiz qoldi)
+// 4. Video boshqaruv datchiklari
 function setupVideoControls(postId) {
     const postEl = document.getElementById(`post_${postId}`);
     if (!postEl) return;
@@ -221,11 +285,14 @@ function setupVideoControls(postId) {
     const video = postEl.querySelector('.reel-video');
     const audioIcon = postEl.querySelector('.audio-status-icon');
 
-    // Video buffer optimizatsiyasi — past internetda ham ijro boshlaydi
     optimizeVideoBuffer(video);
+
     const likeBtn = document.getElementById(`likeBtn_${postId}`);
     const commentBtn = document.getElementById(`commentBtn_${postId}`);
     const shareBtn = document.getElementById(`shareBtn_${postId}`);
+
+    // Post egasining ID sini DOM dan o'qiymiz
+    const postOwnerId = String(postEl.dataset.ownerId || "");
 
     let pressTimer;
 
@@ -256,18 +323,30 @@ function setupVideoControls(postId) {
         const likeIconEl = likeBtn.querySelector('.icon');
 
         if (likeBtn.classList.contains('liked')) {
-            // Laykni olib tashlaymiz - UI darhol yangilanadi
+            // ── Laykni OLIB TASHLAYMIZ ──
             likeBtn.classList.remove('liked');
             if (likeIconEl) likeIconEl.textContent = '🤍';
             const cur = parseInt(likeCountEl.textContent) || 0;
             likeCountEl.textContent = Math.max(0, cur - 1);
+
+            // Faqat ID:777 videosi bo'lsa — maxsus animatsiya
+            if (postOwnerId === "777") {
+                playDexoLikeAnimation(likeBtn);
+            }
+
             await set(likeRef, null);
         } else {
-            // Layk qo'shamiz - UI darhol yangilanadi
+            // ── Layk QO'SHAMIZ ──
             likeBtn.classList.add('liked');
             if (likeIconEl) likeIconEl.textContent = '❤️';
             const cur = parseInt(likeCountEl.textContent) || 0;
             likeCountEl.textContent = cur + 1;
+
+            // Faqat ID:777 videosi bo'lsa — maxsus animatsiya
+            if (postOwnerId === "777") {
+                playDexoLikeAnimation(likeBtn);
+            }
+
             await set(likeRef, true);
         }
     });
@@ -278,52 +357,34 @@ function setupVideoControls(postId) {
         loadComments(postId);
     });
 
-    // shareBtn voqeasini quyidagicha o'zgartiring:
-shareBtn.addEventListener('click', () => {
-    // Siz so'ragan maxsus Mini App havolasi formatini quramiz
-    // postId bu yerda Firebase'dagi postning unikal ID raqami (masalan: -O1abcde...)
-    const miniAppShareUrl = `https://t.me/dexogram_bot/dexo?startapp=${postId}`;
-    
-    // Matn yaratamiz
-    const shareText = "Dexogram-da ajoyib videoni ko'ring! 🎬";
-
-    // Telegram'ning rasmiy ulashish oynasini ochamiz
-    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(miniAppShareUrl)}&text=${encodeURIComponent(shareText)}`);
-});
-
+    shareBtn.addEventListener('click', () => {
+        const miniAppShareUrl = `https://t.me/dexogram_bot/dexo?startapp=${postId}`;
+        const shareText = "Dexogram-da ajoyib videoni ko'ring! 🎬";
+        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(miniAppShareUrl)}&text=${encodeURIComponent(shareText)}`);
+    });
 }
 
 // 4b. Video buffer va stream optimizatsiyasi
-// Brauzerga: "Bu videoni qo'ldan kelgancha oldindan yukla" deb buyruq beramiz
-// preload="auto" + video.load() + buffered tekshiruvi bilan
 function optimizeVideoBuffer(video) {
-    // Brauzer bu videoga maksimal resurs ajratsin
     video.preload = "auto";
 
-    // Agar video hali boshlanmagan bo'lsa, load chaqirib cache'ga olamiz
-    if (video.readyState < 2) { // HAVE_CURRENT_DATA dan kam
+    if (video.readyState < 2) {
         video.load();
     }
 
-    // canplay — birinchi 1MB+ kelganida darhol ijro boshlaydi (to'liq kutmaydi)
     video.addEventListener("canplay", () => {
         if (!video.paused) return;
-        // IntersectionObserver ko'rinmoqda deb belgilagan bo'lsa ijro et
         if (video.dataset.shouldPlay === "true") {
             video.play().catch(() => {});
         }
     }, { once: false });
 
-    // Agar video to'xtab qolsa (buffer tugasa) — avtomatik davom ettiradi
     video.addEventListener("waiting", () => {
-        // Brauzer buffering qilyapti — play() ni qayta chaqiramiz
-        // Bu signal beradi: "davom et, yuklashni to'xtatma"
         if (video.dataset.shouldPlay === "true") {
             video.play().catch(() => {});
         }
     });
 
-    // Stall (tarmoq uzilib qolsa) — qayta urinib ko'ramiz
     video.addEventListener("stalled", () => {
         if (video.dataset.shouldPlay === "true") {
             setTimeout(() => {
@@ -333,7 +394,6 @@ function optimizeVideoBuffer(video) {
         }
     });
 
-    // Error bo'lsa (masalan timeout) — 1 soniya kutib qayta yuklaydi
     video.addEventListener("error", () => {
         if (video.dataset.shouldPlay === "true") {
             setTimeout(() => {
@@ -347,7 +407,7 @@ function optimizeVideoBuffer(video) {
     });
 }
 
-// 5. Sharhlarni Firebase'dan yuklash (O'zgarishsiz qoldi)
+// 5. Sharhlarni Firebase'dan yuklash
 function loadComments(postId) {
     const commentsRef = ref(db, `posts/${postId}/comments`);
     onValue(commentsRef, (snapshot) => {
@@ -393,13 +453,12 @@ sendCommentBtn.addEventListener('click', async () => {
 closeCommentBtn.addEventListener('click', () => commentModal.hidden = true);
 modalBackdrop.addEventListener('click', () => commentModal.hidden = true);
 
-// 6. AVTOMATIK IJRO VA DINAMIK ORALIK REKLAMA TIZIMI (To'liq yangilangan qism)
+// 6. AVTOMATIK IJRO VA DINAMIK ORALIK REKLAMA TIZIMI
 function handleIntersectionObserver() {
     let lastViewedPostId = null;
 
     globalObserver = new IntersectionObserver((entries) => {
         entries.forEach(async (entry) => {
-            // Agar ko'rinayotgan element haqiqiy video post bo'lsa
             if (entry.target.classList.contains('real-video-post')) {
                 const video = entry.target.querySelector('.reel-video');
                 const currentPostId = entry.target.getAttribute('data-post-id');
@@ -409,21 +468,16 @@ function handleIntersectionObserver() {
                     video.dataset.shouldPlay = "true";
                     video.play().catch(err => console.log("Auto-play blocked"));
 
-                    // Faqat foydalanuvchi yangi postga scroll qilgandagina hisoblaymiz
                     if (lastViewedPostId !== currentPostId) {
                         lastViewedPostId = currentPostId;
                         userViewCount++;
 
-                        // Firebase-ga yangilangan ko'rishlar sonini darhol yuboramiz
                         await update(ref(db, `users/${user.id}`), {
                             viewCount: userViewCount
                         });
 
-                        // Monetizatsiya uchun ko'rishni qayd qilamiz (2 soat cooldown bilan)
                         recordPostView(currentPostId, String(user.id));
 
-                        // KALIT MANTIQ: Agar hisoblagich 9 taga yetsa, reklamani oxiriga emas, 
-                        // aynan hozir foydalanuvchi ko'rib turgan joriy postdan keyingi o'ringa (afterend) joylaymiz!
                         if (userViewCount >= AD_TRIGGER_COUNT) {
                             insertAdCardAfterElement(entry.target);
                         }
@@ -433,12 +487,10 @@ function handleIntersectionObserver() {
                     video.pause();
                 }
             } 
-            // Agar ko'rinayotgan element REKLAMA POSTI bo'lsa
             else if (entry.target.classList.contains('ad-post')) {
                 if (entry.isIntersecting) {
                     console.log("User is viewing an advertising post.");
                     
-                    // Reklama postiga o'tishi bilan Firebase hisoblagichini nollaymiz
                     userViewCount = 0;
                     await update(ref(db, `users/${user.id}`), {
                         viewCount: userViewCount
@@ -446,9 +498,8 @@ function handleIntersectionObserver() {
                 }
             }
         });
-    }, { threshold: 0.6 }); // 60% ekranda ko'rinsa faollashadi
+    }, { threshold: 0.6 });
 
-    // Barcha mavjud elementlarni kuzatuvga olamiz
     document.querySelectorAll('.reel-post').forEach(post => {
         globalObserver.observe(post);
     });
