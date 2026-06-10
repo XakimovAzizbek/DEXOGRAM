@@ -62,13 +62,14 @@ let activePostData = null;
 profileUsername.textContent = "@" + (user.username || "anonim");
 profileId.textContent = user.id;
 
-// Firebase dan verified holati tekshiriladi — tasdiqlangan bo'lsa ✓ belgisi qo'shiladi
+// Firebase dan verified holati tekshiriladi — tasdiqlangan bo'lsa verification.png rasmi qo'shiladi
 get(ref(db, "users/" + user.id + "/verified")).then(verSnap => {
     if (verSnap.exists() && verSnap.val() === true) {
-        const checkBadge = document.createElement("span");
-        checkBadge.textContent = " ✓";
-        checkBadge.title = "Tasdiqlangan hisob";
-        checkBadge.style.cssText = "color:#00ffff; font-weight:900; font-size:18px; margin-left:4px; text-shadow: 0 0 8px rgba(0,255,255,0.7);";
+        const checkBadge = document.createElement("img");
+        checkBadge.src = "https://xakimovazizbek.github.io/DEXOGRAM/6270448.png";
+        checkBadge.alt = "Tasdiqlangan";
+        checkBadge.draggable = false;
+        checkBadge.style.cssText = "width:20px; height:20px; margin-left:6px; vertical-align:middle; pointer-events:none; user-select:none; -webkit-user-select:none;";
         profileId.appendChild(checkBadge);
     }
 }).catch(() => {});
