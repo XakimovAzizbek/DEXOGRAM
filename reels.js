@@ -132,7 +132,7 @@ async function initReels() {
                     <div class="audio-status-icon">🔊</div>
 
                     <div class="reel-overlay-left">
-                        <div class="reel-user-id">👤 ID: ${post.userId}</div>
+                        <div class="reel-user-id" id="userId_${postId}">👤 ID: ${post.userId}</div>
                         <div class="reel-caption">${post.caption || ''}</div>
                     </div>
 
@@ -154,6 +154,8 @@ async function initReels() {
             `;
             reelsContainer.insertAdjacentHTML('beforeend', reelHTML);
             setupVideoControls(postId);
+            // Verified badge: post egasi tasdiqlangan bo'lsa verification.png chiqaradi
+            checkVerifiedBadge(postId, String(post.userId));
         });
 
         // AGAR FOYDALANUVCHI ALLAQACHON 9 TA POST KO'RIB KIRGAN BO'LSA
@@ -192,6 +194,23 @@ function insertAdCardAfterElement(element) {
     if (newAd && globalObserver) {
         globalObserver.observe(newAd);
     }
+}
+
+// 3b. Verified badge tekshirish
+async function checkVerifiedBadge(postId, ownerId) {
+    try {
+        const verSnap = await get(ref(db, "users/" + ownerId + "/verified"));
+        if (verSnap.exists() && verSnap.val() === true) {
+            const userIdEl = document.getElementById("userId_" + postId);
+            if (!userIdEl) return;
+            const badge = document.createElement("img");
+            badge.src = "https://xakimovazizbek.github.io/DEXOGRAM/6270448.png";
+            badge.alt = "Tasdiqlangan";
+            badge.draggable = false;
+            badge.style.cssText = "width:18px; height:18px; margin-left:6px; vertical-align:middle; pointer-events:none; user-select:none; -webkit-user-select:none;";
+            userIdEl.appendChild(badge);
+        }
+    } catch (e) {}
 }
 
 // 4. Video boshqaruv datchiklari (O'zgarishsiz qoldi)
