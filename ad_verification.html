@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dexogram - Admin Tasdiqlash</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg: #0b0e14;
+            --card: #161b22;
+            --text: #f0f6fc;
+            --gray: #8b949e;
+            --border: #30363d;
+            --accent: #00ffff;
+            --success: #3fb950;
+            --danger: #ff007f;
+            --purple: #a855f7;
+        }
+        * { margin:0; padding:0; box-sizing:border-box;
+            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+            -webkit-tap-highlight-color:transparent; }
+        body { background:var(--bg); color:var(--text); min-height:100vh; padding-bottom:30px; }
+
+        /* HEADER */
+        .header {
+            position:sticky; top:0; z-index:100;
+            background:rgba(11,14,20,0.9); backdrop-filter:blur(12px);
+            display:flex; align-items:center; justify-content:space-between;
+            padding:15px 20px; border-bottom:1px solid var(--border);
+        }
+        .logo {
+            font-size:18px; font-weight:900; letter-spacing:1px;
+            background:linear-gradient(45deg,#00ffff,#a855f7);
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+            flex:1; text-align:center;
+        }
+        .admin-badge {
+            background:rgba(168,85,247,0.15); color:var(--purple);
+            border:1px solid rgba(168,85,247,0.3);
+            padding:5px 12px; border-radius:20px; font-size:12px; font-weight:700;
+        }
+
+        /* CONTAINER */
+        .container { max-width:500px; margin:0 auto; padding:20px 15px; }
+
+        /* STATS ROW */
+        .stats-row {
+            display:flex; gap:12px; margin-bottom:20px;
+        }
+        .stat-box {
+            flex:1; background:var(--card); border:1px solid var(--border);
+            border-radius:14px; padding:14px; text-align:center;
+        }
+        .stat-num { font-size:24px; font-weight:900; }
+        .stat-num.pending { color:var(--purple); }
+        .stat-num.approved { color:var(--success); }
+        .stat-num.rejected { color:var(--danger); }
+        .stat-label { font-size:11px; color:var(--gray); margin-top:4px; }
+
+        /* FILTER */
+        .filter-row {
+            display:flex; gap:8px; margin-bottom:16px; overflow-x:auto;
+            scrollbar-width:none; padding-bottom:4px;
+        }
+        .filter-btn {
+            flex-shrink:0; padding:8px 16px; border-radius:20px; font-size:13px;
+            font-weight:600; border:1px solid var(--border);
+            background:var(--card); color:var(--gray); cursor:pointer;
+            transition:0.2s;
+        }
+        .filter-btn.active { background:var(--accent); color:#000; border-color:var(--accent); }
+
+        /* REQUEST CARD */
+        .request-card {
+            background:var(--card); border:1px solid var(--border);
+            border-radius:16px; padding:18px; margin-bottom:14px;
+            transition:border-color 0.2s;
+        }
+        .request-card.pending { border-left:3px solid var(--purple); }
+        .request-card.approved { border-left:3px solid var(--success); }
+        .request-card.rejected { border-left:3px solid var(--danger); }
+
+        .req-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+
+        .req-user { display:flex; align-items:center; gap:10px; }
+        .req-avatar {
+            width:44px; height:44px; border-radius:50%;
+            background:linear-gradient(135deg,#00ffff,#007fff);
+            display:flex; align-items:center; justify-content:center;
+            font-size:18px; font-weight:700; color:#000; flex-shrink:0;
+        }
+        .req-name { font-size:15px; font-weight:700; }
+        .req-meta { font-size:12px; color:var(--gray); margin-top:2px; }
+
+        .req-status {
+            padding:5px 12px; border-radius:20px; font-size:12px; font-weight:700;
+        }
+        .req-status.pending { background:rgba(168,85,247,0.15); color:var(--purple); }
+        .req-status.approved { background:rgba(63,185,80,0.15); color:var(--success); }
+        .req-status.rejected { background:rgba(255,0,127,0.15); color:var(--danger); }
+
+        .req-info { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+        .req-info-row { display:flex; justify-content:space-between; font-size:13px; }
+        .req-info-label { color:var(--gray); }
+        .req-info-value { font-weight:600; color:var(--text); }
+
+        /* TUGMALAR */
+        .req-actions { display:flex; gap:10px; }
+        .btn-approve {
+            flex:1; padding:12px; background:linear-gradient(45deg,#3fb950,#1a8a2e);
+            color:#fff; border:none; border-radius:10px;
+            font-size:14px; font-weight:700; cursor:pointer; transition:0.2s;
+        }
+        .btn-approve:active { transform:scale(0.97); }
+        .btn-reject {
+            flex:1; padding:12px; background:linear-gradient(45deg,#ff007f,#cc0066);
+            color:#fff; border:none; border-radius:10px;
+            font-size:14px; font-weight:700; cursor:pointer; transition:0.2s;
+        }
+        .btn-reject:active { transform:scale(0.97); }
+
+        /* Bo'sh holat */
+        .empty-state {
+            text-align:center; padding:50px 20px; color:var(--gray);
+        }
+        .empty-icon { font-size:52px; margin-bottom:14px; }
+        .empty-text { font-size:15px; }
+
+        /* Yuklanmoqda */
+        .loading {
+            text-align:center; padding:40px;
+            display:flex; flex-direction:column; align-items:center; gap:14px;
+        }
+        .spinner {
+            width:40px; height:40px; border:3px solid var(--border);
+            border-top-color:var(--accent); border-radius:50%;
+            animation:spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform:rotate(360deg); } }
+
+        /* Rad sababi modal */
+        .modal-overlay {
+            position:fixed; inset:0; background:rgba(0,0,0,0.8);
+            display:flex; align-items:center; justify-content:center;
+            z-index:9999; padding:20px;
+        }
+        .modal-box {
+            background:var(--card); border:1px solid var(--border);
+            border-radius:20px; padding:28px 22px;
+            max-width:320px; width:100%;
+        }
+        .modal-title { font-size:16px; font-weight:700; margin-bottom:14px; }
+        .modal-input {
+            width:100%; background:var(--bg); border:1px solid var(--border);
+            border-radius:10px; padding:12px 14px; color:var(--text);
+            font-size:14px; outline:none; resize:none; min-height:80px;
+            margin-bottom:14px;
+        }
+        .modal-actions { display:flex; gap:10px; }
+        .modal-cancel {
+            flex:1; padding:12px; background:var(--bg);
+            border:1px solid var(--border); color:var(--gray);
+            border-radius:10px; font-size:14px; font-weight:600; cursor:pointer;
+        }
+        .modal-confirm {
+            flex:1; padding:12px;
+            background:linear-gradient(45deg,#ff007f,#cc0066);
+            color:#fff; border:none; border-radius:10px;
+            font-size:14px; font-weight:700; cursor:pointer;
+        }
+
+        /* Kirish sahifasi */
+        .login-screen {
+            min-height:100vh; display:flex; flex-direction:column;
+            align-items:center; justify-content:center;
+            gap:16px; text-align:center; padding:30px;
+        }
+        .login-icon { font-size:60px; }
+        .login-title { font-size:20px; font-weight:700; }
+        .login-sub { font-size:14px; color:var(--gray); }
+
+        .hidden { display:none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- Kirish yopiq ekrani (admin emas bo'lsa) -->
+    <div id="accessDenied" class="hidden">
+        <div class="login-screen">
+            <div class="login-icon">🔒</div>
+            <p class="login-title">Ruxsat yo'q</p>
+            <p class="login-sub">Bu sahifa faqat adminlar uchun.</p>
+        </div>
+    </div>
+
+    <!-- Admin panel -->
+    <div id="adminPanel" class="hidden">
+
+        <header class="header">
+            <span></span>
+            <h1 class="logo">ADMIN PANEL</h1>
+            <span class="admin-badge">ADMIN</span>
+        </header>
+
+        <div class="container">
+
+            <!-- Statistika -->
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="stat-num pending" id="statPending">0</div>
+                    <div class="stat-label">Kutilmoqda</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-num approved" id="statApproved">0</div>
+                    <div class="stat-label">Tasdiqlangan</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-num rejected" id="statRejected">0</div>
+                    <div class="stat-label">Rad etilgan</div>
+                </div>
+            </div>
+
+            <!-- Filter -->
+            <div class="filter-row">
+                <button class="filter-btn active" data-filter="pending">⏳ Kutmoqda</button>
+                <button class="filter-btn" data-filter="approved">✅ Tasdiqlangan</button>
+                <button class="filter-btn" data-filter="rejected">❌ Rad etilgan</button>
+                <button class="filter-btn" data-filter="all">📋 Barchasi</button>
+            </div>
+
+            <!-- Yuklanmoqda -->
+            <div class="loading" id="loadingEl">
+                <div class="spinner"></div>
+                <span style="color:var(--gray);font-size:14px;">Yuklanmoqda...</span>
+            </div>
+
+            <!-- Arizalar ro'yxati -->
+            <div id="requestsList"></div>
+
+        </div>
+    </div>
+
+    <!-- Rad sababi modal -->
+    <div class="modal-overlay hidden" id="rejectModal">
+        <div class="modal-box">
+            <p class="modal-title">❌ Rad etish sababi</p>
+            <textarea class="modal-input" id="rejectReason" placeholder="Rad etish sababini yozing (ixtiyoriy)..."></textarea>
+            <div class="modal-actions">
+                <button class="modal-cancel" id="modalCancel">Bekor</button>
+                <button class="modal-confirm" id="modalConfirm">Rad et</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="ad_verification.js"></script>
+</body>
+</html>
