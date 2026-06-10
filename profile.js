@@ -62,6 +62,17 @@ let activePostData = null;
 profileUsername.textContent = "@" + (user.username || "anonim");
 profileId.textContent = user.id;
 
+// Firebase dan verified holati tekshiriladi — tasdiqlangan bo'lsa ✓ belgisi qo'shiladi
+get(ref(db, "users/" + user.id + "/verified")).then(verSnap => {
+    if (verSnap.exists() && verSnap.val() === true) {
+        const checkBadge = document.createElement("span");
+        checkBadge.textContent = " ✓";
+        checkBadge.title = "Tasdiqlangan hisob";
+        checkBadge.style.cssText = "color:#00ffff; font-weight:900; font-size:18px; margin-left:4px; text-shadow: 0 0 8px rgba(0,255,255,0.7);";
+        profileId.appendChild(checkBadge);
+    }
+}).catch(() => {});
+
 if (user.photo_url) {
     profileAvatar.src = user.photo_url;
 } else {
