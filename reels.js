@@ -111,8 +111,12 @@ async function initReels() {
         const data = snapshot.val();
         if (!data) return;
 
-        // Postlarni eng yangisini tepaga saralash
-        const postsArray = Object.entries(data).reverse();
+        // Postlarni random (tasodifiy) tartibda chiqarish — Fisher-Yates shuffle
+        const postsArray = Object.entries(data);
+        for (let i = postsArray.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [postsArray[i], postsArray[j]] = [postsArray[j], postsArray[i]];
+        }
 
         postsArray.forEach(([postId, post]) => {
             const likesObj = post.likes_users || {};
