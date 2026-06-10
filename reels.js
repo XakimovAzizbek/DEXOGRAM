@@ -1,1 +1,439 @@
-const _0x2d5476=_0xc96b;(function(_0x560dee,_0x3daefd){const _0x5d6034=_0xc96b,_0x46017b=_0x560dee();while(!![]){try{const _0x3392c5=-parseInt(_0x5d6034(0x1cf))/0x1+-parseInt(_0x5d6034(0x1f1))/0x2+-parseInt(_0x5d6034(0x1e1))/0x3+-parseInt(_0x5d6034(0x217))/0x4+parseInt(_0x5d6034(0x202))/0x5*(-parseInt(_0x5d6034(0x215))/0x6)+parseInt(_0x5d6034(0x1eb))/0x7+parseInt(_0x5d6034(0x1bf))/0x8;if(_0x3392c5===_0x3daefd)break;else _0x46017b['push'](_0x46017b['shift']());}catch(_0x2c1f80){_0x46017b['push'](_0x46017b['shift']());}}}(_0x5b10,0xc0a54));import{initializeApp}from'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';import{getDatabase,ref,onValue,update,push,set,get}from'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';const firebaseConfig={'apiKey':_0x2d5476(0x216),'authDomain':_0x2d5476(0x20b),'projectId':_0x2d5476(0x21a),'storageBucket':_0x2d5476(0x1f8),'messagingSenderId':_0x2d5476(0x218),'appId':_0x2d5476(0x201),'measurementId':_0x2d5476(0x208)},app=initializeApp(firebaseConfig),db=getDatabase(app),tg=window['Telegram'][_0x2d5476(0x1d0)],user=tg[_0x2d5476(0x1e4)]?.['user']||{'id':'777','username':_0x2d5476(0x1e0)},reelsContainer=document[_0x2d5476(0x1fc)](_0x2d5476(0x1c5)),commentModal=document[_0x2d5476(0x1fc)]('commentModal'),closeCommentBtn=document[_0x2d5476(0x1fc)](_0x2d5476(0x1c3)),modalBackdrop=document[_0x2d5476(0x1fc)](_0x2d5476(0x1d7)),commentsList=document['getElementById'](_0x2d5476(0x1df)),commentInput=document['getElementById'](_0x2d5476(0x1e9)),sendCommentBtn=document[_0x2d5476(0x1fc)](_0x2d5476(0x203));let activeCommentPostId=null,globalMuted=!![],userViewCount=0x0;const AD_TRIGGER_COUNT=0x9;let globalObserver=null;const VIEW_COOLDOWN_MS=0x2*0x3c*0x3c*0x3e8;async function loadUserViewCount(){const _0x5d95d6=_0x2d5476,_0x4e78aa=ref(db,_0x5d95d6(0x219)+user['id']+_0x5d95d6(0x1ca));try{const _0x2fedba=await get(_0x4e78aa);_0x2fedba[_0x5d95d6(0x1d1)]()?userViewCount=_0x2fedba[_0x5d95d6(0x1e2)]():userViewCount=0x0;}catch(_0x5557cc){console['error'](_0x5d95d6(0x1f6),_0x5557cc);}}async function recordPostView(_0x274e2c,_0x3b98bb){const _0x405fb7=_0x2d5476;try{const _0x20bd07=await get(ref(db,_0x405fb7(0x22b)+_0x274e2c));if(!_0x20bd07['exists']())return;const _0x3c46ac=_0x20bd07[_0x405fb7(0x1e2)](),_0x442d92=String(_0x3c46ac['userId']),_0x1c8366=await get(ref(db,'users/'+_0x442d92+'/monetization'));if(!_0x1c8366[_0x405fb7(0x1d1)]()||!_0x1c8366['val']()[_0x405fb7(0x229)])return;const _0x32cb90=ref(db,_0x405fb7(0x22b)+_0x274e2c+_0x405fb7(0x1de)+_0x3b98bb),_0x5151f9=await get(_0x32cb90),_0x4bdc47=Date[_0x405fb7(0x1d5)]();if(_0x5151f9[_0x405fb7(0x1d1)]()){const _0x23324f=_0x5151f9['val']()[_0x405fb7(0x1cb)]||0x0;if(_0x4bdc47-_0x23324f<VIEW_COOLDOWN_MS)return;}await set(_0x32cb90,{'lastSeen':_0x4bdc47});const _0x11d23d=_0x1c8366['val'](),_0x5399b1=(_0x11d23d[_0x405fb7(0x1f9)]||0x0)+0x1;await update(ref(db,_0x405fb7(0x219)+_0x442d92+_0x405fb7(0x205)),{'totalViews':_0x5399b1});}catch(_0x26de24){console[_0x405fb7(0x1c8)]('Error\x20while\x20recording\x20view:',_0x26de24);}}const postsRef=ref(db,_0x2d5476(0x211));async function initReels(){await loadUserViewCount(),onValue(postsRef,_0x10b747=>{const _0x33deeb=_0xc96b;reelsContainer[_0x33deeb(0x1d3)]='';const _0x39e1ef=_0x10b747[_0x33deeb(0x1e2)]();if(!_0x39e1ef)return;const _0x42f3d5=Object[_0x33deeb(0x225)](_0x39e1ef);for(let _0x5fc845=_0x42f3d5[_0x33deeb(0x1ee)]-0x1;_0x5fc845>0x0;_0x5fc845--){const _0x4e1cdc=Math['floor'](Math[_0x33deeb(0x1c2)]()*(_0x5fc845+0x1));[_0x42f3d5[_0x5fc845],_0x42f3d5[_0x4e1cdc]]=[_0x42f3d5[_0x4e1cdc],_0x42f3d5[_0x5fc845]];}_0x42f3d5[_0x33deeb(0x1e6)](([_0x234c3c,_0x36fd82])=>{const _0x3ac6bc=_0x33deeb,_0xcb8415=_0x36fd82[_0x3ac6bc(0x21e)]||{},_0x17df57=Object[_0x3ac6bc(0x1db)](_0xcb8415)['length'],_0x4b2251=_0xcb8415[user['id']]?_0x3ac6bc(0x1e8):'',_0x23c1a9=_0xcb8415[user['id']]?'❤️':'🤍',_0x10b545=_0x36fd82['comments']?Object[_0x3ac6bc(0x1db)](_0x36fd82[_0x3ac6bc(0x1c6)])[_0x3ac6bc(0x1ee)]:0x0,_0x4287ef=_0x3ac6bc(0x21b)+_0x234c3c+_0x3ac6bc(0x20e)+_0x234c3c+_0x3ac6bc(0x1d4)+_0x36fd82[_0x3ac6bc(0x1c4)]+_0x3ac6bc(0x1bd)+_0x36fd82['userId']+_0x3ac6bc(0x1f4)+(_0x36fd82[_0x3ac6bc(0x1ce)]||'')+_0x3ac6bc(0x223)+_0x4b2251+_0x3ac6bc(0x1fe)+_0x234c3c+_0x3ac6bc(0x222)+_0x23c1a9+_0x3ac6bc(0x1e7)+_0x234c3c+'\x22>'+_0x17df57+_0x3ac6bc(0x221)+_0x234c3c+'\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span>💬</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span>'+_0x10b545+'</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22action-btn\x22\x20id=\x22shareBtn_'+_0x234c3c+_0x3ac6bc(0x1cc);reelsContainer['insertAdjacentHTML'](_0x3ac6bc(0x21d),_0x4287ef),setupVideoControls(_0x234c3c);});if(userViewCount>=AD_TRIGGER_COUNT){const _0x1722aa=reelsContainer[_0x33deeb(0x210)](_0x33deeb(0x213));_0x1722aa&&insertAdCardAfterElement(_0x1722aa);}handleIntersectionObserver();});}function insertAdCardAfterElement(_0x351b20){const _0x4db87e=_0x2d5476,_0x52d084=document[_0x4db87e(0x1fc)](_0x4db87e(0x206));if(_0x52d084)_0x52d084['remove']();const _0x497e3b=_0x4db87e(0x207);_0x351b20[_0x4db87e(0x212)](_0x4db87e(0x21c),_0x497e3b);const _0xdc13f0=document[_0x4db87e(0x1fc)](_0x4db87e(0x206));_0xdc13f0&&globalObserver&&globalObserver['observe'](_0xdc13f0);}function _0xc96b(_0x5f2bc9,_0x130b84){_0x5f2bc9=_0x5f2bc9-0x1ba;const _0x5b10f3=_0x5b10();let _0xc96bf5=_0x5b10f3[_0x5f2bc9];return _0xc96bf5;}function setupVideoControls(_0x28f97f){const _0x33cb8c=_0x2d5476,_0x5ccce4=document['getElementById'](_0x33cb8c(0x1fa)+_0x28f97f);if(!_0x5ccce4)return;const _0x20a755=_0x5ccce4[_0x33cb8c(0x210)](_0x33cb8c(0x1c7)),_0x23c101=_0x5ccce4[_0x33cb8c(0x210)](_0x33cb8c(0x1d8)),_0x441610=document[_0x33cb8c(0x1fc)]('likeBtn_'+_0x28f97f),_0x4d4dfb=document[_0x33cb8c(0x1fc)](_0x33cb8c(0x1bc)+_0x28f97f),_0x220be9=document[_0x33cb8c(0x1fc)](_0x33cb8c(0x1e5)+_0x28f97f);let _0xaa55a1;_0x20a755['addEventListener'](_0x33cb8c(0x1f5),_0x3224ab=>{_0xaa55a1=setTimeout(()=>{const _0x16bc49=_0xc96b;_0x20a755[_0x16bc49(0x1dc)]();},0x12c);}),_0x20a755[_0x33cb8c(0x1ed)](_0x33cb8c(0x1dd),_0x4208b9=>{const _0x3b279d=_0x33cb8c;clearTimeout(_0xaa55a1),_0x20a755[_0x3b279d(0x1ea)]?_0x20a755[_0x3b279d(0x224)]():(globalMuted=!globalMuted,document[_0x3b279d(0x209)](_0x3b279d(0x1c7))['forEach'](_0x32c77c=>_0x32c77c[_0x3b279d(0x20f)]=globalMuted),_0x23c101[_0x3b279d(0x1f2)]=globalMuted?'🔇':'🔊',_0x23c101[_0x3b279d(0x1da)][_0x3b279d(0x1f0)]='1',setTimeout(()=>_0x23c101[_0x3b279d(0x1da)][_0x3b279d(0x1f0)]='0',0x258));}),_0x441610[_0x33cb8c(0x1ed)](_0x33cb8c(0x1c9),async()=>{const _0x40009b=_0x33cb8c,_0x1038c2=ref(db,_0x40009b(0x22b)+_0x28f97f+_0x40009b(0x1d6)+user['id']);_0x441610[_0x40009b(0x1ff)][_0x40009b(0x220)](_0x40009b(0x1e8))?await set(_0x1038c2,null):await set(_0x1038c2,!![]);}),_0x4d4dfb[_0x33cb8c(0x1ed)](_0x33cb8c(0x1c9),()=>{activeCommentPostId=_0x28f97f,commentModal['hidden']=![],loadComments(_0x28f97f);}),_0x220be9[_0x33cb8c(0x1ed)](_0x33cb8c(0x1c9),()=>{const _0x1621e9=_0x33cb8c,_0x45a111=_0x1621e9(0x1be)+_0x28f97f,_0x37c0c6=_0x1621e9(0x21f);tg[_0x1621e9(0x1e3)]('https://t.me/share/url?url='+encodeURIComponent(_0x45a111)+_0x1621e9(0x204)+encodeURIComponent(_0x37c0c6));});}function _0x5b10(){const _0x164a31=['\x22\x20data-post-id=\x22','muted','querySelector','posts','insertAdjacentHTML','.real-video-post','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22comment-item\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<img\x20src=\x22https://ui-avatars.com/api/?name=','30kCtAHF','AIzaSyBPTYL-3jOhcLi9UkjQWmSG6ArRVio5QKE','4385604vmWILw','1022023262123','users/','loyiha-98a22','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22reel-post\x20real-video-post\x22\x20id=\x22post_','afterend','beforeend','likes_users','Dexogram-da\x20ajoyib\x20videoni\x20ko\x27ring!\x20🎬','contains','</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22action-btn\x22\x20id=\x22commentBtn_','\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20class=\x22icon\x22>','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22reel-overlay-right\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22action-btn\x20','play','entries','</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20class=\x22comment-text\x22>','log','data-post-id','enabled','getAttribute','posts/','catch','observe','commentBtn_','\x22\x20class=\x22reel-video\x22\x20loop\x20playsinline\x20webkit-playsinline\x20muted></video>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22audio-status-icon\x22>🔊</div>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22reel-overlay-left\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22reel-user-id\x22>👤\x20ID:\x20','https://t.me/dexogram_bot/dexo?startapp=','32819472vkOcrM','User\x20is\x20viewing\x20an\x20advertising\x20post.','value','random','closeCommentBtn','video_url','reelsContainer','comments','.reel-video','error','click','/viewCount','lastSeen','\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span>✈️</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span>Ulashish</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','real-video-post','caption','1275858aZEVHo','WebApp','exists','scrollHeight','innerHTML','\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<video\x20src=\x22','now','/likes_users/','modalBackdrop','.audio-status-icon','trim','style','keys','pause','pointerup','/post_views/','commentsList','DexoGram','1335933VEDbGw','val','openTelegramLink','initDataUnsafe','shareBtn_','forEach','</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20id=\x22likeCount_','liked','commentInput','paused','8578808WIHxOo','<div\x20style=\x22text-align:center;color:#8e8e8e;margin-top:20px;\x22>Hali\x20sharhlar\x20yo\x27q.\x20Birinchi\x20bo\x27ling!</div>','addEventListener','length','target','opacity','868754kNjeoO','innerText','ad-post','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22reel-caption\x22>','pointerdown','Error\x20loading\x20counter:','.reel-post','loyiha-98a22.firebasestorage.app','totalViews','post_','&background=random&color=fff\x22\x20class=\x22comment-avatar\x22\x20alt=\x22avatar\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22comment-details\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20class=\x22comment-user\x22>ID:\x20','getElementById','text','\x22\x20id=\x22likeBtn_','classList','Auto-play\x20blocked','1:1022023262123:web:55c0bcf456391fdf80fcee','1286955TzIbNZ','sendCommentBtn','&text=','/monetization','adsgram_post','\x0a\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22reel-post\x20ad-post\x22\x20id=\x22adsgram_post\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<iframe\x20src=\x22ads.html\x22\x20class=\x22ad-iframe\x22\x20style=\x22width:100%;\x20height:100%;\x20border:none;\x22></iframe>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22reel-overlay-left\x22\x20style=\x22bottom:\x2080px;\x20z-index:\x20999;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22reel-caption\x22\x20style=\x22background:rgba(0,0,0,0.7);\x20padding:8px\x2012px;\x20border-radius:8px;\x20font-weight:bold;\x20color:#00ffff;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20📢\x20Sponsored\x20advertising\x20(Adsgram)\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20','G-PPR0TL0CLX','querySelectorAll','hidden','loyiha-98a22.firebaseapp.com','/comments','isIntersecting'];_0x5b10=function(){return _0x164a31;};return _0x5b10();}function loadComments(_0x56a42a){const _0x4be77e=_0x2d5476,_0x571c8b=ref(db,_0x4be77e(0x22b)+_0x56a42a+'/comments');onValue(_0x571c8b,_0x2af59f=>{const _0x53876d=_0x4be77e;commentsList[_0x53876d(0x1d3)]='';const _0x5b999b=_0x2af59f[_0x53876d(0x1e2)]();if(!_0x5b999b){commentsList[_0x53876d(0x1d3)]=_0x53876d(0x1ec);return;}Object['values'](_0x5b999b)[_0x53876d(0x1e6)](_0x46113c=>{const _0x488f7a=_0x53876d,_0x2e28de=_0x488f7a(0x214)+_0x46113c['userId']+_0x488f7a(0x1fb)+_0x46113c['userId']+_0x488f7a(0x226)+_0x46113c[_0x488f7a(0x1fd)]+'</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20';commentsList[_0x488f7a(0x212)](_0x488f7a(0x21d),_0x2e28de);}),commentsList['scrollTop']=commentsList[_0x53876d(0x1d2)];});}sendCommentBtn['addEventListener'](_0x2d5476(0x1c9),async()=>{const _0x2c4e2f=_0x2d5476,_0x25bcb2=commentInput[_0x2c4e2f(0x1c1)][_0x2c4e2f(0x1d9)]();if(!_0x25bcb2||!activeCommentPostId)return;const _0x3baae4=ref(db,_0x2c4e2f(0x22b)+activeCommentPostId+_0x2c4e2f(0x20c)),_0x31ee05=push(_0x3baae4);await set(_0x31ee05,{'userId':user['id'],'text':_0x25bcb2,'timestamp':Date[_0x2c4e2f(0x1d5)]()}),commentInput[_0x2c4e2f(0x1c1)]='';}),closeCommentBtn['addEventListener'](_0x2d5476(0x1c9),()=>commentModal[_0x2d5476(0x20a)]=!![]),modalBackdrop[_0x2d5476(0x1ed)]('click',()=>commentModal[_0x2d5476(0x20a)]=!![]);function handleIntersectionObserver(){const _0x1c45e1=_0x2d5476;let _0x1032cc=null;globalObserver=new IntersectionObserver(_0xe66704=>{_0xe66704['forEach'](async _0x2c0ce0=>{const _0x139785=_0xc96b;if(_0x2c0ce0[_0x139785(0x1ef)][_0x139785(0x1ff)][_0x139785(0x220)](_0x139785(0x1cd))){const _0x14053d=_0x2c0ce0[_0x139785(0x1ef)]['querySelector'](_0x139785(0x1c7)),_0x3a51e5=_0x2c0ce0[_0x139785(0x1ef)][_0x139785(0x22a)](_0x139785(0x228));_0x2c0ce0[_0x139785(0x20d)]?(_0x14053d[_0x139785(0x20f)]=globalMuted,_0x14053d['play']()[_0x139785(0x1ba)](_0x1128b4=>console[_0x139785(0x227)](_0x139785(0x200))),_0x1032cc!==_0x3a51e5&&(_0x1032cc=_0x3a51e5,userViewCount++,await update(ref(db,_0x139785(0x219)+user['id']),{'viewCount':userViewCount}),recordPostView(_0x3a51e5,String(user['id'])),userViewCount>=AD_TRIGGER_COUNT&&insertAdCardAfterElement(_0x2c0ce0['target']))):_0x14053d[_0x139785(0x1dc)]();}else _0x2c0ce0[_0x139785(0x1ef)][_0x139785(0x1ff)][_0x139785(0x220)](_0x139785(0x1f3))&&(_0x2c0ce0['isIntersecting']&&(console[_0x139785(0x227)](_0x139785(0x1c0)),userViewCount=0x0,await update(ref(db,_0x139785(0x219)+user['id']),{'viewCount':userViewCount})));});},{'threshold':0.6}),document[_0x1c45e1(0x209)](_0x1c45e1(0x1f7))['forEach'](_0x57498c=>{const _0x1523cb=_0x1c45e1;globalObserver[_0x1523cb(0x1bb)](_0x57498c);});}initReels();
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getDatabase, ref, onValue, update, push, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+// 1. Firebase Sozlamalari
+const firebaseConfig = {
+  apiKey: "AIzaSyBPTYL-3jOhcLi9UkjQWmSG6ArRVio5QKE",
+  authDomain: "loyiha-98a22.firebaseapp.com",
+  projectId: "loyiha-98a22",
+  storageBucket: "loyiha-98a22.firebasestorage.app",
+  messagingSenderId: "1022023262123",
+  appId: "1:1022023262123:web:55c0bcf456391fdf80fcee",
+  measurementId: "G-PPR0TL0CLX"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// 2. Telegram WebApp ma'lumotlari
+const tg = window.Telegram.WebApp;
+const user = tg.initDataUnsafe?.user || {
+    id: "777",
+    username: "DexoGram"
+};
+
+const reelsContainer = document.getElementById("reelsContainer");
+const commentModal = document.getElementById("commentModal");
+const closeCommentBtn = document.getElementById("closeCommentBtn");
+const modalBackdrop = document.getElementById("modalBackdrop");
+const commentsList = document.getElementById("commentsList");
+const commentInput = document.getElementById("commentInput");
+const sendCommentBtn = document.getElementById("sendCommentBtn");
+
+let activeCommentPostId = null;
+let globalMuted = true; // Sukut bo'yicha videolar ovozsiz boshlanadi
+
+// REKLAMA MANTIQI UCHUN O'ZGARUVCHILAR
+let userViewCount = 0; 
+const AD_TRIGGER_COUNT = 9; // 9 ta post ko'rilgandan keyin keyingisi reklama bo'ladi
+let globalObserver = null; // Observerni dinamik yangilash uchun
+
+// Ko'rish uchun 2 soat cooldown (millisekund)
+const VIEW_COOLDOWN_MS = 2 * 60 * 60 * 1000;
+
+// Firebase'dan foydalanuvchining ko'rishlar sonini yuklash
+async function loadUserViewCount() {
+    const userRef = ref(db, `users/${user.id}/viewCount`);
+    try {
+        const snapshot = await get(userRef);
+        if (snapshot.exists()) {
+            userViewCount = snapshot.val();
+        } else {
+            userViewCount = 0;
+        }
+    } catch (e) {
+        console.error("Error loading counter:", e);
+    }
+}
+
+// =============================================
+// MONETIZATSIYA: Ko'rishni qayd qilish
+// Bitta foydalanuvchi bitta videoni 2 soatda 1 marta ko'rishi hisoblanadi
+// Post egasining monetizatsiyasi yoqiq bo'lsa totalViews oshadi
+// =============================================
+async function recordPostView(postId, viewerUserId) {
+    try {
+        const postSnap = await get(ref(db, `posts/${postId}`));
+        if (!postSnap.exists()) return;
+
+        const post = postSnap.val();
+        const postOwnerId = String(post.userId);
+
+        // Post egasining monetizatsiyasi yoqilganmi?
+        const monoSnap = await get(ref(db, `users/${postOwnerId}/monetization`));
+        if (!monoSnap.exists() || !monoSnap.val().enabled) return;
+
+        // Ko'ruvchining oxirgi ko'rish vaqtini tekshiramiz
+        const viewRef = ref(db, `posts/${postId}/post_views/${viewerUserId}`);
+        const viewSnap = await get(viewRef);
+
+        const now = Date.now();
+
+        if (viewSnap.exists()) {
+            const lastSeen = viewSnap.val().lastSeen || 0;
+            // 2 soat o'tmagan bo'lsa → hisoblamaymiz
+            if (now - lastSeen < VIEW_COOLDOWN_MS) return;
+        }
+
+        // Ko'rishni qayd qilamiz
+        await set(viewRef, { lastSeen: now });
+
+        // Post egasining totalViews ni oshiramiz
+        const monoData = monoSnap.val();
+        const newTotal = (monoData.totalViews || 0) + 1;
+        await update(ref(db, `users/${postOwnerId}/monetization`), {
+            totalViews: newTotal
+        });
+
+    } catch (e) {
+        console.error("Error while recording view:", e);
+    }
+}
+
+// 3. Firebase'dan postlarni yuklab olish va ekranga chiqarish
+const postsRef = ref(db, 'posts');
+
+async function initReels() {
+    await loadUserViewCount(); // Birinchi bo'lib Firebase'dan hisoblagichni o'qiymiz
+
+    get(postsRef).then((snapshot) => {
+        reelsContainer.innerHTML = "";
+        const data = snapshot.val();
+        if (!data) return;
+
+        // Postlarni random (tasodifiy) tartibda chiqarish — Fisher-Yates shuffle
+        const postsArray = Object.entries(data);
+        for (let i = postsArray.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [postsArray[i], postsArray[j]] = [postsArray[j], postsArray[i]];
+        }
+
+        postsArray.forEach(([postId, post]) => {
+            const likesObj = post.likes_users || {};
+            const likesCount = Object.keys(likesObj).length;
+            const isLiked = likesObj[user.id] ? "liked" : "";
+            const likeIcon = likesObj[user.id] ? "❤️" : "🤍";
+            const commentsCount = post.comments ? Object.keys(post.comments).length : 0;
+
+            const reelHTML = `
+                <div class="reel-post real-video-post" id="post_${postId}" data-post-id="${postId}">
+                    <video src="${post.video_url}" class="reel-video" loop playsinline webkit-playsinline muted preload="auto"></video>
+                    
+                    <div class="audio-status-icon">🔊</div>
+
+                    <div class="reel-overlay-left">
+                        <div class="reel-user-id">👤 ID: ${post.userId}</div>
+                        <div class="reel-caption">${post.caption || ''}</div>
+                    </div>
+
+                    <div class="reel-overlay-right">
+                        <button class="action-btn ${isLiked}" id="likeBtn_${postId}">
+                            <span class="icon">${likeIcon}</span>
+                            <span id="likeCount_${postId}">${likesCount}</span>
+                        </button>
+                        <button class="action-btn" id="commentBtn_${postId}">
+                            <span>💬</span>
+                            <span>${commentsCount}</span>
+                        </button>
+                        <button class="action-btn" id="shareBtn_${postId}">
+                            <span>✈️</span>
+                            <span>Ulashish</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            reelsContainer.insertAdjacentHTML('beforeend', reelHTML);
+            setupVideoControls(postId);
+        });
+
+        // AGAR FOYDALANUVCHI ALLAQACHON 9 TA POST KO'RIB KIRGAN BO'LSA
+        // Uni birinchi turgan postdan keyinoq ko'rinadigan qilib joylaymiz (oxirida emas!)
+        if (userViewCount >= AD_TRIGGER_COUNT) {
+            const firstPost = reelsContainer.querySelector('.real-video-post');
+            if (firstPost) {
+                insertAdCardAfterElement(firstPost);
+            }
+        }
+
+        handleIntersectionObserver();
+    });
+}
+
+// Reklamani aynan kerakli elementdan (postdan) keyingi o'ringa joylashtirish funksiyasi
+function insertAdCardAfterElement(element) {
+    // Eski reklama bo'lsa o'chiramiz, chalkashlik bo'lmasligi uchun
+    const oldAd = document.getElementById('adsgram_post');
+    if (oldAd) oldAd.remove();
+    
+    const adHTML = `
+        <div class="reel-post ad-post" id="adsgram_post">
+            <iframe src="ads.html" class="ad-iframe" style="width:100%; height:100%; border:none;"></iframe>
+            <div class="reel-overlay-left" style="bottom: 80px; z-index: 999;">
+                <div class="reel-caption" style="background:rgba(0,0,0,0.7); padding:8px 12px; border-radius:8px; font-weight:bold; color:#00ffff;">
+                    📢 Sponsored advertising (Adsgram)
+                </div>
+            </div>
+        </div>
+    `;
+    element.insertAdjacentHTML('afterend', adHTML);
+    
+    // Agar observer ishlayotgan bo'lsa, yangi reklamani ham kuzatuvga qo'shamiz
+    const newAd = document.getElementById('adsgram_post');
+    if (newAd && globalObserver) {
+        globalObserver.observe(newAd);
+    }
+}
+
+// 4. Video boshqaruv datchiklari (O'zgarishsiz qoldi)
+function setupVideoControls(postId) {
+    const postEl = document.getElementById(`post_${postId}`);
+    if (!postEl) return;
+
+    const video = postEl.querySelector('.reel-video');
+    const audioIcon = postEl.querySelector('.audio-status-icon');
+
+    // Video buffer optimizatsiyasi — past internetda ham ijro boshlaydi
+    optimizeVideoBuffer(video);
+    const likeBtn = document.getElementById(`likeBtn_${postId}`);
+    const commentBtn = document.getElementById(`commentBtn_${postId}`);
+    const shareBtn = document.getElementById(`shareBtn_${postId}`);
+
+    let pressTimer;
+
+    video.addEventListener('pointerdown', (e) => {
+        pressTimer = setTimeout(() => {
+            video.pause();
+        }, 300);
+    });
+
+    video.addEventListener('pointerup', (e) => {
+        clearTimeout(pressTimer);
+        if (video.paused) {
+            video.play();
+        } else {
+            globalMuted = !globalMuted;
+            document.querySelectorAll('.reel-video').forEach(v => v.muted = globalMuted);
+            
+            audioIcon.innerText = globalMuted ? "🔇" : "🔊";
+            audioIcon.style.opacity = "1";
+            setTimeout(() => audioIcon.style.opacity = "0", 600);
+        }
+    });
+
+    likeBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const likeRef = ref(db, `posts/${postId}/likes_users/${user.id}`);
+        const likeCountEl = document.getElementById(`likeCount_${postId}`);
+        const likeIconEl = likeBtn.querySelector('.icon');
+
+        if (likeBtn.classList.contains('liked')) {
+            // Laykni olib tashlaymiz - UI darhol yangilanadi
+            likeBtn.classList.remove('liked');
+            if (likeIconEl) likeIconEl.textContent = '🤍';
+            const cur = parseInt(likeCountEl.textContent) || 0;
+            likeCountEl.textContent = Math.max(0, cur - 1);
+            await set(likeRef, null);
+        } else {
+            // Layk qo'shamiz - UI darhol yangilanadi
+            likeBtn.classList.add('liked');
+            if (likeIconEl) likeIconEl.textContent = '❤️';
+            const cur = parseInt(likeCountEl.textContent) || 0;
+            likeCountEl.textContent = cur + 1;
+            await set(likeRef, true);
+        }
+    });
+
+    commentBtn.addEventListener('click', () => {
+        activeCommentPostId = postId;
+        commentModal.hidden = false;
+        loadComments(postId);
+    });
+
+    // shareBtn voqeasini quyidagicha o'zgartiring:
+shareBtn.addEventListener('click', () => {
+    // Siz so'ragan maxsus Mini App havolasi formatini quramiz
+    // postId bu yerda Firebase'dagi postning unikal ID raqami (masalan: -O1abcde...)
+    const miniAppShareUrl = `https://t.me/dexogram_bot/dexo?startapp=${postId}`;
+    
+    // Matn yaratamiz
+    const shareText = "Dexogram-da ajoyib videoni ko'ring! 🎬";
+
+    // Telegram'ning rasmiy ulashish oynasini ochamiz
+    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(miniAppShareUrl)}&text=${encodeURIComponent(shareText)}`);
+});
+
+}
+
+// 4b. Video buffer va stream optimizatsiyasi
+// Brauzerga: "Bu videoni qo'ldan kelgancha oldindan yukla" deb buyruq beramiz
+// preload="auto" + video.load() + buffered tekshiruvi bilan
+function optimizeVideoBuffer(video) {
+    // Brauzer bu videoga maksimal resurs ajratsin
+    video.preload = "auto";
+
+    // Agar video hali boshlanmagan bo'lsa, load chaqirib cache'ga olamiz
+    if (video.readyState < 2) { // HAVE_CURRENT_DATA dan kam
+        video.load();
+    }
+
+    // canplay — birinchi 1MB+ kelganida darhol ijro boshlaydi (to'liq kutmaydi)
+    video.addEventListener("canplay", () => {
+        if (!video.paused) return;
+        // IntersectionObserver ko'rinmoqda deb belgilagan bo'lsa ijro et
+        if (video.dataset.shouldPlay === "true") {
+            video.play().catch(() => {});
+        }
+    }, { once: false });
+
+    // Agar video to'xtab qolsa (buffer tugasa) — avtomatik davom ettiradi
+    video.addEventListener("waiting", () => {
+        // Brauzer buffering qilyapti — play() ni qayta chaqiramiz
+        // Bu signal beradi: "davom et, yuklashni to'xtatma"
+        if (video.dataset.shouldPlay === "true") {
+            video.play().catch(() => {});
+        }
+    });
+
+    // Stall (tarmoq uzilib qolsa) — qayta urinib ko'ramiz
+    video.addEventListener("stalled", () => {
+        if (video.dataset.shouldPlay === "true") {
+            setTimeout(() => {
+                video.load();
+                video.play().catch(() => {});
+            }, 500);
+        }
+    });
+
+    // Error bo'lsa (masalan timeout) — 1 soniya kutib qayta yuklaydi
+    video.addEventListener("error", () => {
+        if (video.dataset.shouldPlay === "true") {
+            setTimeout(() => {
+                const currentSrc = video.src;
+                video.src = "";
+                video.src = currentSrc;
+                video.load();
+                video.play().catch(() => {});
+            }, 1000);
+        }
+    });
+}
+
+// 5. Sharhlarni Firebase'dan yuklash (O'zgarishsiz qoldi)
+function loadComments(postId) {
+    const commentsRef = ref(db, `posts/${postId}/comments`);
+    onValue(commentsRef, (snapshot) => {
+        commentsList.innerHTML = "";
+        const data = snapshot.val();
+        if (!data) {
+            commentsList.innerHTML = `<div style="text-align:center;color:#8e8e8e;margin-top:20px;">Hali sharhlar yo'q. Birinchi bo'ling!</div>`;
+            return;
+        }
+
+        Object.values(data).forEach(comment => {
+            const commentHTML = `
+                <div class="comment-item">
+                    <img src="https://ui-avatars.com/api/?name=${comment.userId}&background=random&color=fff" class="comment-avatar" alt="avatar">
+                    <div class="comment-details">
+                        <span class="comment-user">ID: ${comment.userId}</span>
+                        <span class="comment-text">${comment.text}</span>
+                    </div>
+                </div>
+            `;
+            commentsList.insertAdjacentHTML('beforeend', commentHTML);
+        });
+        commentsList.scrollTop = commentsList.scrollHeight;
+    });
+}
+
+sendCommentBtn.addEventListener('click', async () => {
+    const text = commentInput.value.trim();
+    if (!text || !activeCommentPostId) return;
+
+    const postCommentRef = ref(db, `posts/${activeCommentPostId}/comments`);
+    const newCommentRef = push(postCommentRef);
+
+    await set(newCommentRef, {
+        userId: user.id,
+        text: text,
+        timestamp: Date.now()
+    });
+
+    commentInput.value = "";
+});
+
+closeCommentBtn.addEventListener('click', () => commentModal.hidden = true);
+modalBackdrop.addEventListener('click', () => commentModal.hidden = true);
+
+// 6. AVTOMATIK IJRO VA DINAMIK ORALIK REKLAMA TIZIMI (To'liq yangilangan qism)
+function handleIntersectionObserver() {
+    let lastViewedPostId = null;
+
+    globalObserver = new IntersectionObserver((entries) => {
+        entries.forEach(async (entry) => {
+            // Agar ko'rinayotgan element haqiqiy video post bo'lsa
+            if (entry.target.classList.contains('real-video-post')) {
+                const video = entry.target.querySelector('.reel-video');
+                const currentPostId = entry.target.getAttribute('data-post-id');
+
+                if (entry.isIntersecting) {
+                    video.muted = globalMuted;
+                    video.dataset.shouldPlay = "true";
+                    video.play().catch(err => console.log("Auto-play blocked"));
+
+                    // Faqat foydalanuvchi yangi postga scroll qilgandagina hisoblaymiz
+                    if (lastViewedPostId !== currentPostId) {
+                        lastViewedPostId = currentPostId;
+                        userViewCount++;
+
+                        // Firebase-ga yangilangan ko'rishlar sonini darhol yuboramiz
+                        await update(ref(db, `users/${user.id}`), {
+                            viewCount: userViewCount
+                        });
+
+                        // Monetizatsiya uchun ko'rishni qayd qilamiz (2 soat cooldown bilan)
+                        recordPostView(currentPostId, String(user.id));
+
+                        // KALIT MANTIQ: Agar hisoblagich 9 taga yetsa, reklamani oxiriga emas, 
+                        // aynan hozir foydalanuvchi ko'rib turgan joriy postdan keyingi o'ringa (afterend) joylaymiz!
+                        if (userViewCount >= AD_TRIGGER_COUNT) {
+                            insertAdCardAfterElement(entry.target);
+                        }
+                    }
+                } else {
+                    video.dataset.shouldPlay = "false";
+                    video.pause();
+                }
+            } 
+            // Agar ko'rinayotgan element REKLAMA POSTI bo'lsa
+            else if (entry.target.classList.contains('ad-post')) {
+                if (entry.isIntersecting) {
+                    console.log("User is viewing an advertising post.");
+                    
+                    // Reklama postiga o'tishi bilan Firebase hisoblagichini nollaymiz
+                    userViewCount = 0;
+                    await update(ref(db, `users/${user.id}`), {
+                        viewCount: userViewCount
+                    });
+                }
+            }
+        });
+    }, { threshold: 0.6 }); // 60% ekranda ko'rinsa faollashadi
+
+    // Barcha mavjud elementlarni kuzatuvga olamiz
+    document.querySelectorAll('.reel-post').forEach(post => {
+        globalObserver.observe(post);
+    });
+}
+
+// Loyihani ishga tushirish
+initReels();
