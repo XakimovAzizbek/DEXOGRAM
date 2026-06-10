@@ -6,6 +6,8 @@
     <title>Dexogram - Tasdiqlash</title>
     <link rel="stylesheet" href="verification.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Adsgram SDK -->
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 </head>
 <body>
 
@@ -44,6 +46,15 @@
                 </div>
                 <span class="progress-text" id="progressText">0 / 5 ta reklama ko'rildi</span>
             </div>
+
+            <!-- Har bir reklama uchun alohida indikator -->
+            <div class="ad-steps">
+                <div class="ad-step" id="step1">📺 1-reklama</div>
+                <div class="ad-step" id="step2">📺 2-reklama</div>
+                <div class="ad-step" id="step3">📺 3-reklama</div>
+                <div class="ad-step" id="step4">📺 4-reklama</div>
+                <div class="ad-step" id="step5">📺 5-reklama</div>
+            </div>
         </div>
 
         <!-- Tavsif -->
@@ -58,7 +69,7 @@
             <button class="btn-ad" id="watchAdBtn">
                 📺 Reklama ko'rish
             </button>
-            <p class="ad-note">Har bir reklama uchun 1 ball beriladi. 5 ta reklama ko'ring.</p>
+            <p class="ad-note" id="adNote">1-reklamani ko'rish uchun bosing</p>
         </div>
 
         <!-- 5 ta reklama ko'rilgandan keyin — tekshiruvga yuborish -->
@@ -94,12 +105,12 @@
             </button>
         </div>
 
-        <!-- Reklama ko'rilmoqda overlay -->
+        <!-- Reklama yuklanmoqda overlay -->
         <div class="ad-overlay hidden" id="adOverlay">
             <div class="ad-box">
                 <div class="spinner"></div>
-                <p class="ad-text">Reklama ko'rilmoqda...</p>
-                <p class="ad-sub" id="adCountdown">5 soniya qoldi</p>
+                <p class="ad-text" id="adOverlayText">Reklama yuklanmoqda...</p>
+                <p class="ad-sub" id="adCountdown">Iltimos kuting</p>
             </div>
         </div>
 

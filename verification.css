@@ -403,3 +403,42 @@ body {
 .rejected-icon { font-size: 50px; }
 .rejected-text { font-size: 18px; font-weight: 700; color: var(--danger-color); }
 .rejected-sub { font-size: 13px; color: var(--gray-color); line-height: 1.5; }
+
+/* AD STEPS — har bir reklama uchun indikatorlar */
+.ad-steps {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+}
+
+.ad-step {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 4px;
+    border-radius: 10px;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    font-size: 11px;
+    color: var(--gray-color);
+    text-align: center;
+    transition: all 0.3s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ad-step.done {
+    background: rgba(0, 255, 255, 0.1);
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    font-weight: 700;
+}
+
+.ad-step.active {
+    background: rgba(0, 127, 255, 0.15);
+    border-color: #007fff;
+    color: #007fff;
+    font-weight: 700;
+    box-shadow: 0 0 8px rgba(0, 127, 255, 0.3);
+}

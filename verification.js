@@ -23,6 +23,19 @@ const userId = String(user.id);
 const ADS_REQUIRED = 5;
 
 // =============================================
+// HAR BIR REKLAMA UCHUN ALOHIDA ADSGRAM BLOCK ID
+// 1-reklama → BLOCK_IDS[0], 2-reklama → BLOCK_IDS[1] ...
+// O'z block ID laringizni shu yerga kiriting
+// =============================================
+const BLOCK_IDS = [
+    "int-34680",   // 1-reklama
+    "int-34681",   // 2-reklama
+    "int-34682",   // 3-reklama
+    "int-34683",   // 4-reklama
+    "int-34684"    // 5-reklama
+];
+
+// =============================================
 // SAHIFA YUKLANGANDA
 // =============================================
 window.addEventListener("load", async () => {
@@ -41,13 +54,12 @@ async function loadStatus() {
 
 // =============================================
 // UI YANGILASH
-// status: "none" | "pending" | "approved" | "rejected"
 // =============================================
 function updateUI(data) {
     const adsWatched = data.adsWatched || 0;
     const status = data.status || "none";
 
-    // Progress
+    // Progress raqami
     document.getElementById("adsWatched").textContent = adsWatched;
     document.getElementById("progressFill").style.width = `${Math.min((adsWatched / ADS_REQUIRED) * 100, 100)}%`;
     document.getElementById("progressText").textContent = `${adsWatched} / ${ADS_REQUIRED} ta reklama ko'rildi`;
@@ -55,6 +67,29 @@ function updateUI(data) {
     if (adsWatched >= ADS_REQUIRED) {
         document.getElementById("adsCheck").textContent = "✓";
         document.getElementById("adsCheck").classList.add("passed");
+    }
+
+    // Har bir step indikatorini yangilaymiz
+    for (let i = 1; i <= ADS_REQUIRED; i++) {
+        const stepEl = document.getElementById(`step${i}`);
+        if (!stepEl) continue;
+        stepEl.classList.remove("done", "active");
+        if (i <= adsWatched) {
+            stepEl.textContent = `✅ ${i}-reklama`;
+            stepEl.classList.add("done");
+        } else if (i === adsWatched + 1 && status === "none") {
+            stepEl.textContent = `▶ ${i}-reklama`;
+            stepEl.classList.add("active");
+        } else {
+            stepEl.textContent = `📺 ${i}-reklama`;
+        }
+    }
+
+    // Tugma yozuvini yangilaymiz
+    const nextNum = adsWatched + 1;
+    if (adsWatched < ADS_REQUIRED) {
+        document.getElementById("watchAdBtn").textContent = `📺 ${nextNum}-reklamani ko'rish`;
+        document.getElementById("adNote").textContent = `${nextNum} / ${ADS_REQUIRED} — Bosing va reklamani to'liq ko'ring`;
     }
 
     // Barcha kartalarni yashiramiz
@@ -65,7 +100,6 @@ function updateUI(data) {
     hide("rejectedCard");
 
     if (status === "approved") {
-        // TASDIQLANGAN
         document.getElementById("statusIcon").textContent = "✅";
         document.getElementById("statusTitle").textContent = "Hisob tasdiqlangan!";
         const badge = document.getElementById("statusBadge");
@@ -75,14 +109,12 @@ function updateUI(data) {
         show("verifiedCard");
 
     } else if (status === "pending") {
-        // KUTILMOQDA
         document.getElementById("statusIcon").textContent = "⏳";
         document.getElementById("statusTitle").textContent = "Tekshiruvda...";
         document.getElementById("statusBadge").textContent = "Admin ko'rib chiqmoqda";
         show("pendingCard");
 
     } else if (status === "rejected") {
-        // RAD ETILDI
         document.getElementById("statusIcon").textContent = "❌";
         document.getElementById("statusTitle").textContent = "Ariza rad etildi";
         document.getElementById("statusBadge").textContent = "Rad etildi";
@@ -90,9 +122,7 @@ function updateUI(data) {
         document.getElementById("rejectedReason").textContent = reason;
         show("rejectedCard");
 
-        // Qaytadan yuborish tugmasi
         document.getElementById("retryBtn").addEventListener("click", async () => {
-            // Statusni nollaymiz — qaytadan reklama ko'radi
             await update(ref(db, `users/${userId}/verification`), {
                 adsWatched: 0,
                 status: "none",
@@ -102,12 +132,10 @@ function updateUI(data) {
         });
 
     } else {
-        // HALI YUBORILMAGAN
+        // status === "none"
         if (adsWatched >= ADS_REQUIRED) {
-            // 5 ta reklama ko'rilgan — yuborish tugmasi
             show("submitSection");
         } else {
-            // Hali reklama ko'rish kerak
             show("adSection");
         }
     }
@@ -130,20 +158,82 @@ document.getElementById("watchAdBtn").addEventListener("click", async () => {
         return;
     }
 
-    showAdOverlay(async () => {
+    // Navbatdagi reklama uchun block ID
+    const blockId = BLOCK_IDS[adsWatched]; // 0-indexed: 0,1,2,3,4
+
+    showAdsgram(blockId, adsWatched + 1, async () => {
+        // Reklama muvaffaqiyatli ko'rildi — Firebase yangilaymiz
         const newCount = adsWatched + 1;
         await update(ref(db, `users/${userId}/verification`), {
             adsWatched: newCount,
             status: "none"
         });
-
-        if (newCount >= ADS_REQUIRED) {
-            updateUI({ adsWatched: newCount, status: "none" });
-        } else {
-            updateUI({ adsWatched: newCount, status: "none" });
-        }
+        updateUI({ adsWatched: newCount, status: "none" });
     });
 });
+
+// =============================================
+// ADSGRAM SDK ORQALI REKLAMA KO'RSATISH
+// blockId    — shu reklamaning Adsgram block ID si
+// adNumber   — 1,2,3,4,5 (foydalanuvchiga ko'rsatish uchun)
+// onComplete — reklama ko'rilgandan so'ng chaqiriladi
+// =============================================
+function showAdsgram(blockId, adNumber, onComplete) {
+    const overlay = document.getElementById("adOverlay");
+    const overlayText = document.getElementById("adOverlayText");
+    const btn = document.getElementById("watchAdBtn");
+
+    overlay.classList.remove("hidden");
+    overlayText.textContent = `${adNumber}-reklama yuklanmoqda...`;
+    document.getElementById("adCountdown").textContent = "Iltimos kuting";
+    btn.disabled = true;
+
+    // Adsgram SDK bilan reklama chaqirish
+    if (window.Adsgram) {
+        const AdController = window.Adsgram.init({ blockId: blockId });
+
+        AdController.show()
+            .then(() => {
+                // Reklama to'liq ko'rildi
+                overlay.classList.add("hidden");
+                btn.disabled = false;
+                document.getElementById("adCountdown").textContent = `${adNumber}-reklama ko'rildi ✅`;
+                onComplete();
+            })
+            .catch((result) => {
+                // Foydalanuvchi reklamani yopdi yoki xatolik
+                // skip bo'lsa hisoblamaymiz
+                overlay.classList.add("hidden");
+                btn.disabled = false;
+                if (result && result.done) {
+                    // To'liq ko'rildi lekin catch ga tushdi
+                    onComplete();
+                } else {
+                    showAlert("⚠️", "Reklamani to'liq ko'ring! O'rtada yopilsa hisoblanmaydi.");
+                }
+            });
+    } else {
+        // Adsgram SDK yuklanmagan (test rejimi — 5 soniya simulyatsiya)
+        let seconds = 5;
+        const countdownEl = document.getElementById("adCountdown");
+        countdownEl.textContent = `${seconds} soniya qoldi`;
+
+        const timer = setInterval(() => {
+            seconds--;
+            if (seconds > 0) {
+                countdownEl.textContent = `${seconds} soniya qoldi`;
+            } else {
+                clearInterval(timer);
+                countdownEl.textContent = `${adNumber}-reklama ko'rildi ✅`;
+                setTimeout(() => {
+                    overlay.classList.add("hidden");
+                    btn.disabled = false;
+                    onComplete();
+                }, 500);
+            }
+        }, 1000);
+    }
+}
 
 // =============================================
 // TEKSHIRUVGA YUBORISH TUGMASI
@@ -154,7 +244,6 @@ document.getElementById("submitBtn").addEventListener("click", async () => {
     btn.textContent = "Yuborilmoqda...";
 
     try {
-        // verification_requests ga yozamiz — admin shu joydan o'qiydi
         await set(ref(db, `verification_requests/${userId}`), {
             userId: userId,
             username: user.username || "",
@@ -164,7 +253,6 @@ document.getElementById("submitBtn").addEventListener("click", async () => {
             status: "pending"
         });
 
-        // Foydalanuvchi statusini ham yangilaymiz
         await update(ref(db, `users/${userId}/verification`), {
             status: "pending",
             requestedAt: Date.now()
@@ -182,46 +270,6 @@ document.getElementById("submitBtn").addEventListener("click", async () => {
 });
 
 // =============================================
-// ADSGRAM REKLAMA OVERLAY
-// =============================================
-function showAdOverlay(onComplete) {
-    const overlay = document.getElementById("adOverlay");
-    const countdownEl = document.getElementById("adCountdown");
-    const btn = document.getElementById("watchAdBtn");
-
-    overlay.classList.remove("hidden");
-    btn.disabled = true;
-
-    if (window.Adsgram) {
-        const adController = window.Adsgram.init({ blockId: "YOUR_ADSGRAM_BLOCK_ID" });
-        adController.show().then(() => {
-            overlay.classList.add("hidden");
-            btn.disabled = false;
-            onComplete();
-        }).catch(() => {
-            overlay.classList.add("hidden");
-            btn.disabled = false;
-            onComplete();
-        });
-    } else {
-        let seconds = 5;
-        countdownEl.textContent = `${seconds} soniya qoldi`;
-        const timer = setInterval(() => {
-            seconds--;
-            countdownEl.textContent = seconds > 0 ? `${seconds} soniya qoldi` : "Reklama tugadi!";
-            if (seconds <= 0) {
-                clearInterval(timer);
-                setTimeout(() => {
-                    overlay.classList.add("hidden");
-                    btn.disabled = false;
-                    onComplete();
-                }, 500);
-            }
-        }, 1000);
-    }
-}
-
-// =============================================
 // CHIROYLI ALERT
 // =============================================
 function showAlert(icon, message) {
@@ -230,10 +278,9 @@ function showAlert(icon, message) {
     const modal = document.createElement("div");
     modal.id = "customAlert";
     modal.style.cssText = `
-        position: fixed; inset: 0;
-        background: rgba(0,0,0,0.8);
-        display: flex; align-items: center; justify-content: center;
-        z-index: 9999; padding: 20px;
+        position:fixed; inset:0; background:rgba(0,0,0,0.8);
+        display:flex; align-items:center; justify-content:center;
+        z-index:9999; padding:20px;
     `;
     modal.innerHTML = `
         <div style="background:#161b22;border:1px solid #30363d;border-radius:20px;
