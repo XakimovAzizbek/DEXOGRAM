@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dexogram - Profil</title>
+    <link rel="stylesheet" href="user_profile.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+
+    <header class="header">
+        <button class="back-btn" onclick="history.back()">←</button>
+        <h1 class="logo" id="headerUsername">PROFIL</h1>
+        <div class="header-placeholder"></div>
+    </header>
+
+    <!-- Loading -->
+    <div class="page-loading" id="pageLoading">
+        <div class="spinner"></div>
+        <div>Yuklanmoqda...</div>
+    </div>
+
+    <!-- Xatolik -->
+    <div class="page-error" id="pageError" style="display:none;">
+        <div class="error-icon">😕</div>
+        <div class="error-text">Foydalanuvchi topilmadi</div>
+        <button class="back-btn-big" onclick="history.back()">← Orqaga</button>
+    </div>
+
+    <!-- Asosiy kontent -->
+    <main class="profile-wrap" id="profileWrap" style="display:none;">
+
+        <!-- Profil qismi -->
+        <div class="profile-section">
+            <img id="upAvatar" class="avatar" src="" alt="avatar">
+            <div class="profile-info">
+                <div class="username-row">
+                    <span class="username" id="upUsername">@username</span>
+                    <img class="verified-badge" id="verifiedBadge" src="https://xakimovazizbek.github.io/DEXOGRAM/6270448.png" alt="✅" style="display:none;">
+                </div>
+                <div class="uid">ID: <b id="upId">0</b></div>
+            </div>
+        </div>
+
+        <!-- Statistika -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-big" id="upSubscribers">0</div>
+                <div class="stat-small">Obunachilar</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-big" id="upSubscriptions">0</div>
+                <div class="stat-small">Obunalar</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-big" id="upVideos">0</div>
+                <div class="stat-small">Videolar</div>
+            </div>
+        </div>
+
+        <!-- Follow tugmasi -->
+        <div class="follow-wrap">
+            <button class="follow-btn" id="followBtn">Yuklanmoqda...</button>
+        </div>
+
+        <!-- Videolar -->
+        <div class="videos-wrap">
+            <div class="section-title">Videolar</div>
+            <div class="videos-grid" id="videosGrid">
+                <div class="no-videos">Videolar yuklanmoqda...</div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Video Modal -->
+    <div class="modal-overlay" id="videoModal">
+        <div class="modal-bg" id="modalBg"></div>
+        <div class="modal-box">
+            <button class="modal-close" id="closeModal">&times;</button>
+            <video id="modalVideo" controls playsinline></video>
+            <div class="modal-meta">
+                <div class="meta-id">ID: <span id="metaId"></span></div>
+                <div class="meta-caption" id="metaCaption"></div>
+            </div>
+            <div class="modal-stats">
+                <div class="ms-item">
+                    <div class="ms-num" id="metaLikes">0</div>
+                    <div class="ms-label">Layk</div>
+                </div>
+                <div class="ms-item">
+                    <div class="ms-num" id="metaComments">0</div>
+                    <div class="ms-label">Sharh</div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-share" id="shareBtn">✈️ Ulashish</button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="home.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span>Home</span>
+        </a>
+        <a href="search.html" class="nav-item active">
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <span>Qidirish</span>
+        </a>
+        <a href="create.html" class="nav-item upload-btn">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            <span>Post</span>
+        </a>
+        <a href="reels.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg>
+            <span>Reels</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+            <span>Profil</span>
+        </a>
+    </nav>
+
+    <script type="module" src="user_profile.js"></script>
+</body>
+</html>
