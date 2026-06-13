@@ -132,6 +132,38 @@ async function loadUserViewCount() {
 }
 
 // =============================================
+// QOSHILDI: Reels mukofot counterini yangilash
+// Har yangi video ko'rilganda chaqiriladi
+// users/{uid}/rewards/reelsWatchedToday + reelsWatchDate
+// =============================================
+async function updateReelsRewardCounter() {
+    try {
+        const today = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+        const rewardsRef = ref(db, `users/${user.id}/rewards`);
+        const snap = await get(rewardsRef);
+        const rewards = snap.exists() ? snap.val() : {};
+
+        const savedDate  = rewards.reelsWatchDate     || "";
+        const savedCount = rewards.reelsWatchedToday  || 0;
+
+        if (savedDate === today) {
+            // Bugun — sonni bittaga oshiramiz
+            await update(rewardsRef, {
+                reelsWatchedToday: savedCount + 1
+            });
+        } else {
+            // Yangi kun — sonni 1 dan boshlaymiz, sanani yangilaymiz
+            await update(rewardsRef, {
+                reelsWatchedToday: 1,
+                reelsWatchDate: today
+            });
+        }
+    } catch (e) {
+        console.error("Reels reward counter error:", e);
+    }
+}
+
+// =============================================
 // MONETIZATSIYA: Ko'rishni qayd qilish
 // =============================================
 async function recordPostView(postId, viewerUserId) {
@@ -477,6 +509,9 @@ function handleIntersectionObserver() {
                         });
 
                         recordPostView(currentPostId, String(user.id));
+
+                        // ── QOSHILDI: Reels mukofot counterini yangilash ──
+                        updateReelsRewardCounter();
 
                         if (userViewCount >= AD_TRIGGER_COUNT) {
                             insertAdCardAfterElement(entry.target);
