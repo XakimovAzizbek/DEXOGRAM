@@ -17,313 +17,367 @@ const db = getDatabase(app);
 
 // 2. Telegram WebApp ma'lumotlari
 const tg = window.Telegram.WebApp;
-const user = tg.initDataUnsafe?.user || {
-    id: "777",
-    username: "DexoGram"
-};
+const user = tg.initDataUnsafe?.user || { id: "777", username: "DexoGram" };
 
-const reelsContainer = document.getElementById("reelsContainer");
-const commentModal = document.getElementById("commentModal");
+const reelsContainer  = document.getElementById("reelsContainer");
+const commentModal    = document.getElementById("commentModal");
 const closeCommentBtn = document.getElementById("closeCommentBtn");
-const modalBackdrop = document.getElementById("modalBackdrop");
-const commentsList = document.getElementById("commentsList");
-const commentInput = document.getElementById("commentInput");
-const sendCommentBtn = document.getElementById("sendCommentBtn");
+const modalBackdrop   = document.getElementById("modalBackdrop");
+const commentsList    = document.getElementById("commentsList");
+const commentInput    = document.getElementById("commentInput");
+const sendCommentBtn  = document.getElementById("sendCommentBtn");
 
 let activeCommentPostId = null;
-let globalMuted = true;
+let globalMuted         = true;
 
-// REKLAMA MANTIQI UCHUN O'ZGARUVCHILAR
-let userViewCount = 0;
+let userViewCount    = 0;
 const AD_TRIGGER_COUNT = 9;
-let globalObserver = null;
+let globalObserver   = null;
 
-// Ko'rish uchun 2 soat cooldown (millisekund)
 const VIEW_COOLDOWN_MS = 2 * 60 * 60 * 1000;
 
-// =============================================
-// TEZLASHTIRISH #1: Barcha verified userlarni
-// BIR MARTA yuklab cache'ga saqlaymiz
-// Har bir post uchun alohida Firebase so'rovi YO'Q
-// =============================================
-const verifiedUsersCache = new Set(); // tasdiqlangan user IDlar
-let verifiedCacheLoaded = false;
+// ── Tasdiqlangan foydalanuvchilar cache ──────────────────
+const verifiedUsersCache = new Set();
 
 async function loadVerifiedUsersCache() {
     try {
-        const usersSnap = await get(ref(db, "users"));
-        if (!usersSnap.exists()) return;
-        const users = usersSnap.val();
-        Object.entries(users).forEach(([uid, data]) => {
-            if (data.verified === true) verifiedUsersCache.add(uid);
+        const snap = await get(ref(db, "users"));
+        if (!snap.exists()) return;
+        Object.entries(snap.val()).forEach(([uid, d]) => {
+            if (d.verified === true) verifiedUsersCache.add(uid);
         });
-        verifiedCacheLoaded = true;
     } catch (e) {}
 }
 
-// =============================================
-// DexoGram (ID:777) layk animatsiyasi CSS
-// =============================================
+// ── DexoGram (777) layk animatsiyasi ────────────────────
 (function injectDexoAnimStyle() {
     if (document.getElementById('dexo-like-style')) return;
-    const style = document.createElement('style');
-    style.id = 'dexo-like-style';
-    style.textContent = `
+    const s = document.createElement('style');
+    s.id = 'dexo-like-style';
+    s.textContent = `
         @keyframes dexoLikePop {
-            0%   { transform: translate(-50%, -50%) scale(0) rotate(-20deg); opacity: 1; }
-            40%  { transform: translate(-50%, -50%) scale(1.6) rotate(10deg); opacity: 1; }
-            65%  { transform: translate(-50%, -50%) scale(1.1) rotate(-5deg); opacity: 1; }
-            80%  { transform: translate(-50%, -50%) scale(1.3) rotate(0deg);  opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(0.5) rotate(0deg);  opacity: 0; }
+            0%   { transform:translate(-50%,-50%) scale(0) rotate(-20deg); opacity:1; }
+            40%  { transform:translate(-50%,-50%) scale(1.6) rotate(10deg); opacity:1; }
+            65%  { transform:translate(-50%,-50%) scale(1.1) rotate(-5deg); opacity:1; }
+            80%  { transform:translate(-50%,-50%) scale(1.3) rotate(0deg);  opacity:1; }
+            100% { transform:translate(-50%,-50%) scale(0.5) rotate(0deg);  opacity:0; }
         }
         @keyframes dexoLikeIconPop {
-            0%   { transform: scale(1); }
-            30%  { transform: scale(0.6); }
-            60%  { transform: scale(1.3); }
-            100% { transform: scale(1); }
+            0%  { transform:scale(1); }
+            30% { transform:scale(0.6); }
+            60% { transform:scale(1.3); }
+            100%{ transform:scale(1); }
         }
         .dexo-like-img {
-            position: absolute;
-            width: 64px;
-            height: 64px;
-            object-fit: contain;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            pointer-events: none;
-            z-index: 9999;
-            animation: dexoLikePop 0.7s cubic-bezier(.36,.07,.19,.97) forwards;
+            position:absolute; width:64px; height:64px; object-fit:contain;
+            left:50%; top:50%;
+            transform:translate(-50%,-50%) scale(0);
+            pointer-events:none; z-index:9999;
+            animation:dexoLikePop 0.7s cubic-bezier(.36,.07,.19,.97) forwards;
         }
-        .dexo-icon-pop {
-            animation: dexoLikeIconPop 0.4s ease forwards !important;
-        }
+        .dexo-icon-pop { animation:dexoLikeIconPop 0.4s ease forwards !important; }
     `;
-    document.head.appendChild(style);
+    document.head.appendChild(s);
 })();
 
-// =============================================
-// DexoGram layk animatsiyasini ishga tushirish
-// faqat postOwnerId === "777" bo'lganda
-// =============================================
 function playDexoLikeAnimation(likeBtn) {
     likeBtn.querySelectorAll('.dexo-like-img').forEach(el => el.remove());
-
     const img = document.createElement('img');
     img.src = 'https://xakimovazizbek.github.io/DEXOGRAM/dexogram.png';
     img.className = 'dexo-like-img';
     img.draggable = false;
-
     likeBtn.style.position = 'relative';
-    likeBtn.style.overflow = 'visible';
+    likeBtn.style.overflow  = 'visible';
     likeBtn.appendChild(img);
-
     const iconEl = likeBtn.querySelector('.icon');
     if (iconEl) {
         iconEl.classList.remove('dexo-icon-pop');
         void iconEl.offsetWidth;
         iconEl.classList.add('dexo-icon-pop');
     }
-
     img.addEventListener('animationend', () => {
         img.remove();
         if (iconEl) iconEl.classList.remove('dexo-icon-pop');
     });
 }
 
-// Firebase'dan foydalanuvchining ko'rishlar sonini yuklash
+// ── viewCount ────────────────────────────────────────────
 async function loadUserViewCount() {
-    const userRef = ref(db, `users/${user.id}/viewCount`);
     try {
-        const snapshot = await get(userRef);
-        if (snapshot.exists()) {
-            userViewCount = snapshot.val();
-        } else {
-            userViewCount = 0;
-        }
-    } catch (e) {
-        console.error("Error loading counter:", e);
-    }
+        const snap = await get(ref(db, `users/${user.id}/viewCount`));
+        userViewCount = snap.exists() ? snap.val() : 0;
+    } catch (e) {}
 }
 
-// =============================================
-// Reels mukofot counterini yangilash
-// =============================================
+// ── Rewards counter ──────────────────────────────────────
 async function updateReelsRewardCounter() {
     try {
         const today = new Date().toISOString().slice(0, 10);
-        const rewardsRef = ref(db, `users/${user.id}/rewards`);
-        const snap = await get(rewardsRef);
-        const rewards = snap.exists() ? snap.val() : {};
-        const savedDate  = rewards.reelsWatchDate    || "";
-        const savedCount = rewards.reelsWatchedToday || 0;
-        if (savedDate === today) {
-            await update(rewardsRef, { reelsWatchedToday: savedCount + 1 });
+        const r = ref(db, `users/${user.id}/rewards`);
+        const snap = await get(r);
+        const d = snap.exists() ? snap.val() : {};
+        if (d.reelsWatchDate === today) {
+            await update(r, { reelsWatchedToday: (d.reelsWatchedToday || 0) + 1 });
         } else {
-            await update(rewardsRef, { reelsWatchedToday: 1, reelsWatchDate: today });
+            await update(r, { reelsWatchedToday: 1, reelsWatchDate: today });
         }
     } catch (e) {}
 }
 
-// =============================================
-// MONETIZATSIYA: Ko'rishni qayd qilish
-// =============================================
+// ── Monetizatsiya ko'rish qayd ───────────────────────────
 async function recordPostView(postId, viewerUserId) {
     try {
         const postSnap = await get(ref(db, `posts/${postId}`));
         if (!postSnap.exists()) return;
-
-        const post = postSnap.val();
-        const postOwnerId = String(post.userId);
-
-        const monoSnap = await get(ref(db, `users/${postOwnerId}/monetization`));
+        const ownerId = String(postSnap.val().userId);
+        const monoSnap = await get(ref(db, `users/${ownerId}/monetization`));
         if (!monoSnap.exists() || !monoSnap.val().enabled) return;
-
-        const viewRef = ref(db, `posts/${postId}/post_views/${viewerUserId}`);
+        const viewRef  = ref(db, `posts/${postId}/post_views/${viewerUserId}`);
         const viewSnap = await get(viewRef);
         const now = Date.now();
-
-        if (viewSnap.exists()) {
-            const lastSeen = viewSnap.val().lastSeen || 0;
-            if (now - lastSeen < VIEW_COOLDOWN_MS) return;
-        }
-
+        if (viewSnap.exists() && now - (viewSnap.val().lastSeen || 0) < VIEW_COOLDOWN_MS) return;
         await set(viewRef, { lastSeen: now });
-
-        const monoData = monoSnap.val();
-        const newTotal = (monoData.totalViews || 0) + 1;
-        await update(ref(db, `users/${postOwnerId}/monetization`), {
-            totalViews: newTotal
-        });
+        const newTotal = (monoSnap.val().totalViews || 0) + 1;
+        await update(ref(db, `users/${ownerId}/monetization`), { totalViews: newTotal });
     } catch (e) {}
 }
 
-// 3. Firebase'dan postlarni yuklab olish va ekranga chiqarish
-const postsRef = ref(db, 'posts');
+// ════════════════════════════════════════════════════════
+// VIDEO MENEJERI — bitta aktiv video boshqaruvchisi
+// Maqsad: faqat ekrandagi videoga internet kuchi berilsin,
+//         qolganlarning src ni bo'shatib tashlaymiz.
+// ════════════════════════════════════════════════════════
+let currentActiveVideo = null;  // hozir ijro etilayotgan video elementi
+let currentActiveSrc   = null;  // uning asl URL si
 
-async function initReels() {
-    // TEZLASHTIRISH: Ikkalasini parallel yuklaymiz
-    await Promise.all([
-        loadUserViewCount(),
-        loadVerifiedUsersCache()
-    ]);
+// Videoni aktivlashtirish — internet kuchini shu videoga to'liq beradi
+function activateVideo(video) {
+    // Agar boshqa video aktiv bo'lsa — uni to'liq o'chirib qo'yamiz
+    if (currentActiveVideo && currentActiveVideo !== video) {
+        deactivateVideo(currentActiveVideo);
+    }
 
-    get(postsRef).then((snapshot) => {
-        reelsContainer.innerHTML = "";
-        const data = snapshot.val();
-        if (!data) return;
+    // data-src dan asl URL ni olamiz
+    const src = video.dataset.src;
+    if (!src) return;
 
-        // Postlarni random tartibda chiqarish — Fisher-Yates shuffle
-        const postsArray = Object.entries(data);
-        for (let i = postsArray.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [postsArray[i], postsArray[j]] = [postsArray[j], postsArray[i]];
-        }
+    currentActiveVideo = video;
+    currentActiveSrc   = src;
 
-        postsArray.forEach(([postId, post]) => {
-            const likesObj = post.likes_users || {};
-            const likesCount = Object.keys(likesObj).length;
-            const isLiked = likesObj[user.id] ? "liked" : "";
-            const likeIcon = likesObj[user.id] ? "❤️" : "🤍";
-            const commentsCount = post.comments ? Object.keys(post.comments).length : 0;
+    // Agar src yo'q yoki boshqa src bo'lsa — qayta yuklaymiz
+    if (video.getAttribute('src') !== src) {
+        video.setAttribute('src', src);
+        video.load();
+    }
 
-            // TEZLASHTIRISH #2: Cache dan verified tekshiramiz — Firebase so'rovi YO'Q
-            const isVerified = verifiedUsersCache.has(String(post.userId));
-            const verifiedBadge = isVerified
-                ? `<img src="https://xakimovazizbek.github.io/DEXOGRAM/6270448.png" alt="✓"
-                        draggable="false"
-                        style="width:18px;height:18px;margin-left:6px;vertical-align:middle;
-                               pointer-events:none;user-select:none;-webkit-user-select:none;">`
-                : "";
+    video.dataset.shouldPlay = "true";
+    video.muted = globalMuted;
 
-            const reelHTML = `
-                <div class="reel-post real-video-post" id="post_${postId}" data-post-id="${postId}" data-owner-id="${post.userId}">
-                    <!-- TEZLASHTIRISH #3: preload="none" — faqat ko'rilayotgan video yuklanadi -->
-                    <video class="reel-video" loop playsinline webkit-playsinline muted preload="none" data-src="${post.video_url}"></video>
+    // canplay hodisasini kutamiz — buffer yetarli bo'lganda ijro boshlaymiz
+    const tryPlay = () => {
+        if (video.dataset.shouldPlay !== "true") return;
+        video.play().catch(() => {});
+    };
 
-                    <div class="audio-status-icon">🔊</div>
-
-                    <div class="reel-overlay-left">
-                        <div class="reel-user-id" id="userId_${postId}">👤 ID: ${post.userId}${verifiedBadge}</div>
-                        <div class="reel-caption">${post.caption || ''}</div>
-                    </div>
-
-                    <div class="reel-overlay-right">
-                        <button class="action-btn ${isLiked}" id="likeBtn_${postId}">
-                            <span class="icon">${likeIcon}</span>
-                            <span id="likeCount_${postId}">${likesCount}</span>
-                        </button>
-                        <button class="action-btn" id="commentBtn_${postId}">
-                            <span>💬</span>
-                            <span>${commentsCount}</span>
-                        </button>
-                        <button class="action-btn" id="shareBtn_${postId}">
-                            <span>✈️</span>
-                            <span>Ulashish</span>
-                        </button>
-                    </div>
-                </div>
-            `;
-            reelsContainer.insertAdjacentHTML('beforeend', reelHTML);
-            setupVideoControls(postId);
-        });
-
-        if (userViewCount >= AD_TRIGGER_COUNT) {
-            const firstPost = reelsContainer.querySelector('.real-video-post');
-            if (firstPost) {
-                insertAdCardAfterElement(firstPost);
-            }
-        }
-
-        handleIntersectionObserver();
-    });
-}
-
-// Reklamani aynan kerakli elementdan keyingi o'ringa joylashtirish
-function insertAdCardAfterElement(element) {
-    const oldAd = document.getElementById('adsgram_post');
-    if (oldAd) oldAd.remove();
-
-    const adHTML = `
-        <div class="reel-post ad-post" id="adsgram_post">
-            <iframe src="ads.html" class="ad-iframe" style="width:100%; height:100%; border:none;"></iframe>
-            <div class="reel-overlay-left" style="bottom: 80px; z-index: 999;">
-                <div class="reel-caption" style="background:rgba(0,0,0,0.7); padding:8px 12px; border-radius:8px; font-weight:bold; color:#00ffff;">
-                    📢 Sponsored advertising (Adsgram)
-                </div>
-            </div>
-        </div>
-    `;
-    element.insertAdjacentHTML('afterend', adHTML);
-
-    const newAd = document.getElementById('adsgram_post');
-    if (newAd && globalObserver) {
-        globalObserver.observe(newAd);
+    if (video.readyState >= 3) {
+        // Yetarli buffer bor — darhol ijro
+        tryPlay();
+    } else {
+        video.addEventListener('canplay', tryPlay, { once: true });
     }
 }
 
-// 4. Video boshqaruv datchiklari
-function setupVideoControls(postId) {
-    const postEl = document.getElementById(`post_${postId}`);
-    if (!postEl) return;
+// Videoni deaktivlashtirish — internetni bo'shatadi
+function deactivateVideo(video) {
+    video.dataset.shouldPlay = "false";
+    video.pause();
+    // src ni tozalaymiz — brauzer bu video uchun tarmoqni to'xtatadi
+    // va resursni keyingi videoga beradi
+    video.removeAttribute('src');
+    video.load(); // abort — tarmoq so'rovini bekor qiladi
+    if (currentActiveVideo === video) {
+        currentActiveVideo = null;
+        currentActiveSrc   = null;
+    }
+}
 
-    const video = postEl.querySelector('.reel-video');
-    const audioIcon = postEl.querySelector('.audio-status-icon');
-    const likeBtn = document.getElementById(`likeBtn_${postId}`);
-    const commentBtn = document.getElementById(`commentBtn_${postId}`);
-    const shareBtn = document.getElementById(`shareBtn_${postId}`);
+// Video to'xtalib qolganda (buffer tugaса) — qayta urinish
+function setupBufferRecovery(video) {
+    // Faqat bir marta ulashimiz kerak — dataset bilan tekshiramiz
+    if (video.dataset.bufferSetup === "1") return;
+    video.dataset.bufferSetup = "1";
 
-    const postOwnerId = String(postEl.dataset.ownerId || "");
-
-    let pressTimer;
-
-    video.addEventListener('pointerdown', () => {
-        pressTimer = setTimeout(() => { video.pause(); }, 300);
+    video.addEventListener("waiting", () => {
+        if (video.dataset.shouldPlay !== "true") return;
+        // Buffer kutmoqda — brauzer o'zi yuklab oladi, biz kutamiz
+        // Agar 3 soniyada ham boshlanmasa — src ni refresh qilamiz
+        const waitTimer = setTimeout(() => {
+            if (video.dataset.shouldPlay !== "true") return;
+            if (video.paused) {
+                const src = video.dataset.src;
+                if (src) {
+                    video.setAttribute('src', src);
+                    video.load();
+                    video.play().catch(() => {});
+                }
+            }
+        }, 3000);
+        // Agar o'zi boshlansa — timerni bekor qilamiz
+        video.addEventListener('playing', () => clearTimeout(waitTimer), { once: true });
     });
 
+    video.addEventListener("stalled", () => {
+        if (video.dataset.shouldPlay !== "true") return;
+        setTimeout(() => {
+            if (video.dataset.shouldPlay !== "true") return;
+            video.play().catch(() => {});
+        }, 800);
+    });
+
+    video.addEventListener("error", () => {
+        if (video.dataset.shouldPlay !== "true") return;
+        setTimeout(() => {
+            const src = video.dataset.src;
+            if (!src) return;
+            video.setAttribute('src', src);
+            video.load();
+            video.play().catch(() => {});
+        }, 1500);
+    });
+
+    // ── Video oxiriga yetganda qayta boshlash (loop o'rniga)
+    // Muammo: loop="true" ba'zan to'liq ko'rsatmay qayta boshlaydi
+    // Yechim: ended hodisasida currentTime = 0 qilib o'zimiz boshlaymiz
+    video.addEventListener("ended", () => {
+        if (video.dataset.shouldPlay !== "true") return;
+        video.currentTime = 0;
+        video.play().catch(() => {});
+    });
+}
+
+// ── Postlarni yuklash ─────────────────────────────────────
+const postsRef = ref(db, 'posts');
+
+async function initReels() {
+    await Promise.all([loadUserViewCount(), loadVerifiedUsersCache()]);
+
+    const snapshot = await get(postsRef);
+    reelsContainer.innerHTML = "";
+    const data = snapshot.val();
+    if (!data) return;
+
+    // Random tartib — Fisher-Yates shuffle
+    const postsArray = Object.entries(data);
+    for (let i = postsArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [postsArray[i], postsArray[j]] = [postsArray[j], postsArray[i]];
+    }
+
+    postsArray.forEach(([postId, post]) => {
+        const likesObj     = post.likes_users || {};
+        const likesCount   = Object.keys(likesObj).length;
+        const isLiked      = likesObj[user.id] ? "liked" : "";
+        const likeIcon     = likesObj[user.id] ? "❤️" : "🤍";
+        const commentsCount = post.comments ? Object.keys(post.comments).length : 0;
+        const isVerified   = verifiedUsersCache.has(String(post.userId));
+        const verifiedBadge = isVerified
+            ? `<img src="https://xakimovazizbek.github.io/DEXOGRAM/6270448.png"
+                    alt="✓" draggable="false"
+                    style="width:18px;height:18px;margin-left:6px;vertical-align:middle;
+                           pointer-events:none;user-select:none;-webkit-user-select:none;">`
+            : "";
+
+        // loop YO'Q — ended hodisasida o'zimiz boshqaramiz (to'liq ko'rsatish uchun)
+        // preload="none" — src berilmaydi, faqat ekranga chiqqanda yuklanadi
+        const reelHTML = `
+            <div class="reel-post real-video-post"
+                 id="post_${postId}"
+                 data-post-id="${postId}"
+                 data-owner-id="${post.userId}">
+                <video class="reel-video"
+                       playsinline webkit-playsinline muted
+                       preload="none"
+                       data-src="${post.video_url}"></video>
+
+                <div class="audio-status-icon">🔊</div>
+
+                <div class="reel-overlay-left">
+                    <div class="reel-user-id" id="userId_${postId}">
+                        👤 ID: ${post.userId}${verifiedBadge}
+                    </div>
+                    <div class="reel-caption">${post.caption || ''}</div>
+                </div>
+
+                <div class="reel-overlay-right">
+                    <button class="action-btn ${isLiked}" id="likeBtn_${postId}">
+                        <span class="icon">${likeIcon}</span>
+                        <span id="likeCount_${postId}">${likesCount}</span>
+                    </button>
+                    <button class="action-btn" id="commentBtn_${postId}">
+                        <span>💬</span>
+                        <span>${commentsCount}</span>
+                    </button>
+                    <button class="action-btn" id="shareBtn_${postId}">
+                        <span>✈️</span>
+                        <span>Ulashish</span>
+                    </button>
+                </div>
+            </div>
+        `;
+        reelsContainer.insertAdjacentHTML('beforeend', reelHTML);
+        setupVideoControls(postId);
+    });
+
+    if (userViewCount >= AD_TRIGGER_COUNT) {
+        const first = reelsContainer.querySelector('.real-video-post');
+        if (first) insertAdCardAfterElement(first);
+    }
+
+    handleIntersectionObserver();
+}
+
+// ── Reklama kartasi ──────────────────────────────────────
+function insertAdCardAfterElement(element) {
+    const old = document.getElementById('adsgram_post');
+    if (old) old.remove();
+    const adHTML = `
+        <div class="reel-post ad-post" id="adsgram_post">
+            <iframe src="ads.html" style="width:100%;height:100%;border:none;"></iframe>
+            <div class="reel-overlay-left" style="bottom:80px;z-index:999;">
+                <div class="reel-caption"
+                     style="background:rgba(0,0,0,0.7);padding:8px 12px;
+                            border-radius:8px;font-weight:bold;color:#00ffff;">
+                    📢 Sponsored advertising (Adsgram)
+                </div>
+            </div>
+        </div>`;
+    element.insertAdjacentHTML('afterend', adHTML);
+    const newAd = document.getElementById('adsgram_post');
+    if (newAd && globalObserver) globalObserver.observe(newAd);
+}
+
+// ── Video boshqaruv datchiklari ──────────────────────────
+function setupVideoControls(postId) {
+    const postEl   = document.getElementById(`post_${postId}`);
+    if (!postEl) return;
+    const video    = postEl.querySelector('.reel-video');
+    const audioIcon = postEl.querySelector('.audio-status-icon');
+    const likeBtn  = document.getElementById(`likeBtn_${postId}`);
+    const commentBtn = document.getElementById(`commentBtn_${postId}`);
+    const shareBtn = document.getElementById(`shareBtn_${postId}`);
+    const postOwnerId = String(postEl.dataset.ownerId || "");
+
+    // Buffer recovery bir marta ulaymiz
+    setupBufferRecovery(video);
+
+    let pressTimer;
+    video.addEventListener('pointerdown', () => {
+        pressTimer = setTimeout(() => video.pause(), 300);
+    });
     video.addEventListener('pointerup', () => {
         clearTimeout(pressTimer);
         if (video.paused) {
-            video.play();
+            video.play().catch(() => {});
         } else {
             globalMuted = !globalMuted;
             document.querySelectorAll('.reel-video').forEach(v => v.muted = globalMuted);
@@ -335,9 +389,9 @@ function setupVideoControls(postId) {
 
     likeBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        const likeRef = ref(db, `posts/${postId}/likes_users/${user.id}`);
+        const likeRef    = ref(db, `posts/${postId}/likes_users/${user.id}`);
         const likeCountEl = document.getElementById(`likeCount_${postId}`);
-        const likeIconEl = likeBtn.querySelector('.icon');
+        const likeIconEl  = likeBtn.querySelector('.icon');
 
         if (likeBtn.classList.contains('liked')) {
             likeBtn.classList.remove('liked');
@@ -369,51 +423,13 @@ function setupVideoControls(postId) {
     });
 
     shareBtn.addEventListener('click', () => {
-        const miniAppShareUrl = `https://t.me/dexogram_bot/dexo?startapp=${postId}`;
-        const shareText = "Dexogram-da ajoyib videoni ko'ring! 🎬";
-        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(miniAppShareUrl)}&text=${encodeURIComponent(shareText)}`);
+        const url  = `https://t.me/dexogram_bot/dexo?startapp=${postId}`;
+        const text = "Dexogram-da ajoyib videoni ko'ring! 🎬";
+        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`);
     });
 }
 
-// 4b. Video buffer va stream optimizatsiyasi
-// TEZLASHTIRISH #4: Faqat ko'rilayotgan videoga src beramiz
-function loadVideoSrc(video) {
-    if (video.src || !video.dataset.src) return;
-    video.src = video.dataset.src;
-    video.preload = "auto";
-    video.load();
-}
-
-function optimizeActiveVideo(video) {
-    video.addEventListener("waiting", () => {
-        if (video.dataset.shouldPlay === "true") {
-            video.play().catch(() => {});
-        }
-    });
-
-    video.addEventListener("stalled", () => {
-        if (video.dataset.shouldPlay === "true") {
-            setTimeout(() => {
-                video.load();
-                video.play().catch(() => {});
-            }, 500);
-        }
-    });
-
-    video.addEventListener("error", () => {
-        if (video.dataset.shouldPlay === "true") {
-            setTimeout(() => {
-                const s = video.dataset.src || video.src;
-                video.src = "";
-                video.src = s;
-                video.load();
-                video.play().catch(() => {});
-            }, 1000);
-        }
-    });
-}
-
-// 5. Sharhlarni Firebase'dan yuklash
+// ── Sharhlar ─────────────────────────────────────────────
 function loadComments(postId) {
     const commentsRef = ref(db, `posts/${postId}/comments`);
     onValue(commentsRef, (snapshot) => {
@@ -424,16 +440,16 @@ function loadComments(postId) {
             return;
         }
         Object.values(data).forEach(comment => {
-            const commentHTML = `
+            commentsList.insertAdjacentHTML('beforeend', `
                 <div class="comment-item">
-                    <img src="https://ui-avatars.com/api/?name=${comment.userId}&background=random&color=fff" class="comment-avatar" alt="avatar">
+                    <img src="https://ui-avatars.com/api/?name=${comment.userId}&background=random&color=fff"
+                         class="comment-avatar" alt="avatar">
                     <div class="comment-details">
                         <span class="comment-user">ID: ${comment.userId}</span>
                         <span class="comment-text">${comment.text}</span>
                     </div>
                 </div>
-            `;
-            commentsList.insertAdjacentHTML('beforeend', commentHTML);
+            `);
         });
         commentsList.scrollTop = commentsList.scrollHeight;
     });
@@ -442,76 +458,58 @@ function loadComments(postId) {
 sendCommentBtn.addEventListener('click', async () => {
     const text = commentInput.value.trim();
     if (!text || !activeCommentPostId) return;
-
-    const postCommentRef = ref(db, `posts/${activeCommentPostId}/comments`);
-    const newCommentRef = push(postCommentRef);
-
-    await set(newCommentRef, {
-        userId: user.id,
-        text: text,
-        timestamp: Date.now()
-    });
-
+    const r = push(ref(db, `posts/${activeCommentPostId}/comments`));
+    await set(r, { userId: user.id, text, timestamp: Date.now() });
     commentInput.value = "";
 });
 
 closeCommentBtn.addEventListener('click', () => commentModal.hidden = true);
-modalBackdrop.addEventListener('click', () => commentModal.hidden = true);
+modalBackdrop.addEventListener('click',   () => commentModal.hidden = true);
 
-// 6. AVTOMATIK IJRO VA DINAMIK ORALIK REKLAMA TIZIMI
+// ── IntersectionObserver ──────────────────────────────────
 function handleIntersectionObserver() {
     let lastViewedPostId = null;
 
     globalObserver = new IntersectionObserver((entries) => {
         entries.forEach(async (entry) => {
+
+            // ── HAQIQIY VIDEO POST ──
             if (entry.target.classList.contains('real-video-post')) {
                 const video = entry.target.querySelector('.reel-video');
                 const currentPostId = entry.target.getAttribute('data-post-id');
 
                 if (entry.isIntersecting) {
-                    // TEZLASHTIRISH: src faqat shu vaqtda yuklanadi
-                    loadVideoSrc(video);
-                    optimizeActiveVideo(video);
-
-                    video.muted = globalMuted;
-                    video.dataset.shouldPlay = "true";
-                    video.play().catch(() => {});
+                    // Internet kuchini faqat shu videoga beramiz
+                    activateVideo(video);
 
                     if (lastViewedPostId !== currentPostId) {
                         lastViewedPostId = currentPostId;
                         userViewCount++;
-
-                        await update(ref(db, `users/${user.id}`), {
-                            viewCount: userViewCount
-                        });
-
+                        update(ref(db, `users/${user.id}`), { viewCount: userViewCount });
                         recordPostView(currentPostId, String(user.id));
                         updateReelsRewardCounter();
-
                         if (userViewCount >= AD_TRIGGER_COUNT) {
                             insertAdCardAfterElement(entry.target);
                         }
                     }
                 } else {
-                    video.dataset.shouldPlay = "false";
-                    video.pause();
+                    // Ekrandan chiqqan video — internetni bo'shatamiz
+                    deactivateVideo(video);
                 }
             }
+
+            // ── REKLAMA POST ──
             else if (entry.target.classList.contains('ad-post')) {
                 if (entry.isIntersecting) {
                     userViewCount = 0;
-                    await update(ref(db, `users/${user.id}`), {
-                        viewCount: userViewCount
-                    });
+                    update(ref(db, `users/${user.id}`), { viewCount: 0 });
                 }
             }
         });
-    }, { threshold: 0.6 });
+    }, { threshold: 0.7 }); // 70% ko'ringanda faollashadi
 
-    document.querySelectorAll('.reel-post').forEach(post => {
-        globalObserver.observe(post);
-    });
+    document.querySelectorAll('.reel-post').forEach(p => globalObserver.observe(p));
 }
 
-// Loyihani ishga tushirish
+// Ishga tushirish
 initReels();
