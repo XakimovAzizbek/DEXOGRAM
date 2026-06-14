@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Migration — Realtime DB → Firestore</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:#0b0e14; color:#f0f6fc; font-family:-apple-system,sans-serif; padding:20px; }
+        h1 { font-size:18px; margin-bottom:20px; background:linear-gradient(45deg,#00ffff,#ff007f); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .log { background:#161b22; border:1px solid #30363d; border-radius:12px; padding:16px; margin-bottom:16px; font-size:12px; line-height:1.8; max-height:400px; overflow-y:auto; }
+        .log-line { padding:2px 0; }
+        .log-line.ok   { color:#22c55e; }
+        .log-line.err  { color:#ff007f; }
+        .log-line.info { color:#00ffff; }
+        .log-line.warn { color:#fbbf24; }
+        button { width:100%; padding:14px; background:linear-gradient(90deg,#00ffff,#007fff); color:#000; border:none; border-radius:10px; font-size:15px; font-weight:700; cursor:pointer; margin-bottom:10px; }
+        button:disabled { opacity:0.5; cursor:default; }
+        .stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
+        .stat-box { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:12px; text-align:center; }
+        .stat-num  { font-size:24px; font-weight:700; color:#00ffff; }
+        .stat-label{ font-size:11px; color:#8b949e; margin-top:4px; }
+        .progress-bar { height:6px; background:#30363d; border-radius:99px; margin-bottom:16px; overflow:hidden; }
+        .progress-fill { height:100%; width:0%; background:linear-gradient(90deg,#00ffff,#22c55e); border-radius:99px; transition:width 0.3s; }
+    </style>
+</head>
+<body>
+    <h1>🔄 Realtime DB → Firestore Migration</h1>
+
+    <div class="stats">
+        <div class="stat-box"><div class="stat-num" id="stPosts">—</div><div class="stat-label">Posts</div></div>
+        <div class="stat-box"><div class="stat-num" id="stUsers">—</div><div class="stat-label">Users</div></div>
+        <div class="stat-box"><div class="stat-num" id="stDone">0</div><div class="stat-label">Ko'chirildi</div></div>
+        <div class="stat-box"><div class="stat-num" id="stErr">0</div><div class="stat-label">Xatolik</div></div>
+    </div>
+
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+    <button id="startBtn">🚀 Migration boshlash</button>
+    <button id="verifyBtn" style="background:rgba(0,255,255,0.1);color:#00ffff;border:1px solid rgba(0,255,255,0.25);">🔍 Tekshirish (Firestore son)</button>
+
+    <div class="log" id="logBox"></div>
+
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getFirestore, collection, doc, setDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBPTYL-3jOhcLi9UkjQWmSG6ArRVio5QKE",
+        authDomain: "loyiha-98a22.firebaseapp.com",
+        projectId: "loyiha-98a22",
+        storageBucket: "loyiha-98a22.firebasestorage.app",
+        messagingSenderId: "1022023262123",
+        appId: "1:1022023262123:web:55c0bcf456391fdf80fcee",
+        measurementId: "G-PPR0TL0CLX"
+    };
+
+    const app       = initializeApp(firebaseConfig);
+    const rtdb      = getDatabase(app);
+    const firestore = getFirestore(app);
+
+    const logBox   = document.getElementById("logBox");
+    const stDone   = document.getElementById("stDone");
+    const stErr    = document.getElementById("stErr");
+    const progress = document.getElementById("progressFill");
+    let doneCount  = 0;
+    let errCount   = 0;
+    let totalCount = 0;
+
+    function log(msg, type = "info") {
+        const div = document.createElement("div");
+        div.className = "log-line " + type;
+        div.textContent = new Date().toLocaleTimeString() + " — " + msg;
+        logBox.appendChild(div);
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function updateProgress() {
+        const pct = totalCount > 0 ? Math.round((doneCount + errCount) / totalCount * 100) : 0;
+        progress.style.width = pct + "%";
+    }
+
+    document.getElementById("startBtn").addEventListener("click", async () => {
+        const btn = document.getElementById("startBtn");
+        btn.disabled = true;
+        doneCount = 0; errCount = 0; totalCount = 0;
+        logBox.innerHTML = "";
+
+        log("Realtime DB dan ma'lumotlar o'qilmoqda...", "info");
+
+        try {
+            // ── 1. POSTS ──────────────────────────────────────
+            const postsSnap = await get(ref(rtdb, "posts"));
+            const usersSnap = await get(ref(rtdb, "users"));
+
+            const postsData = postsSnap.exists() ? postsSnap.val() : {};
+            const usersData = usersSnap.exists() ? usersSnap.val() : {};
+
+            const postIds  = Object.keys(postsData);
+            const userIds  = Object.keys(usersData);
+
+            document.getElementById("stPosts").textContent = postIds.length;
+            document.getElementById("stUsers").textContent = userIds.length;
+            totalCount = postIds.length + userIds.length + 1; // +1 pushNotification
+
+            log(`Topildi: ${postIds.length} post, ${userIds.length} foydalanuvchi`, "info");
+
+            // ── 2. POSTS → FIRESTORE ─────────────────────────
+            log("Posts ko'chirilmoqda...", "info");
+            for (const [postId, post] of Object.entries(postsData)) {
+                try {
+                    await setDoc(doc(firestore, "posts", postId), {
+                        userId:     post.userId     || "",
+                        username:   post.username   || "anonim",
+                        first_name: post.first_name || "",
+                        video_url:  post.video_url  || "",
+                        caption:    post.caption    || "",
+                        likes:      post.likes      || 0,
+                        likes_users: post.likes_users || {},
+                        comments:   post.comments   || {},
+                        post_views: post.post_views || {},
+                        timestamp:  post.timestamp  || Date.now()
+                    });
+                    doneCount++;
+                    stDone.textContent = doneCount;
+                    updateProgress();
+                    log(`✓ Post ko'chirildi: ${postId}`, "ok");
+                } catch (e) {
+                    errCount++;
+                    stErr.textContent = errCount;
+                    updateProgress();
+                    log(`✗ Post xatosi (${postId}): ${e.message}`, "err");
+                }
+            }
+
+            // ── 3. USERS → FIRESTORE ─────────────────────────
+            log("Foydalanuvchilar ko'chirilmoqda...", "info");
+            for (const [uid, userData] of Object.entries(usersData)) {
+                try {
+                    // Balans, monetizatsiya va boshqa barcha ma'lumotlar
+                    await setDoc(doc(firestore, "users", uid), {
+                        subscribers:   userData.subscribers   || 0,
+                        subscriptions: userData.subscriptions || 0,
+                        verified:      userData.verified      || false,
+                        followers:     userData.followers     || {},
+                        viewCount:     userData.viewCount     || 0,
+                        monetization:  userData.monetization  || {},
+                        rewards:       userData.rewards       || {},
+                        ...(userData.username    ? { username:    userData.username }    : {}),
+                        ...(userData.first_name  ? { first_name:  userData.first_name }  : {}),
+                        ...(userData.photo_url   ? { photo_url:   userData.photo_url }   : {}),
+                        ...(userData.email       ? { email:       userData.email }       : {}),
+                        ...(userData.bio         ? { bio:         userData.bio }         : {})
+                    });
+                    doneCount++;
+                    stDone.textContent = doneCount;
+                    updateProgress();
+                    log(`✓ User ko'chirildi: ${uid}`, "ok");
+                } catch (e) {
+                    errCount++;
+                    stErr.textContent = errCount;
+                    updateProgress();
+                    log(`✗ User xatosi (${uid}): ${e.message}`, "err");
+                }
+            }
+
+            // ── 4. PUSH NOTIFICATION → FIRESTORE ─────────────
+            log("Push notification ko'chirilmoqda...", "info");
+            try {
+                const pushSnap = await get(ref(rtdb, "pushNotification"));
+                if (pushSnap.exists()) {
+                    const pushData = pushSnap.val();
+                    await setDoc(doc(firestore, "pushNotification", "main"), {
+                        enabled:     pushData.enabled     || false,
+                        title:       pushData.title       || "",
+                        description: pushData.description || "",
+                        buttonText:  pushData.buttonText  || "",
+                        buttonLink:  pushData.buttonLink  || "",
+                        updatedAt:   pushData.updatedAt   || Date.now()
+                    });
+                    doneCount++;
+                    stDone.textContent = doneCount;
+                    updateProgress();
+                    log("✓ Push notification ko'chirildi", "ok");
+                } else {
+                    log("Push notification mavjud emas — o'tkazib yuborildi", "warn");
+                    doneCount++;
+                    updateProgress();
+                }
+            } catch (e) {
+                errCount++;
+                stErr.textContent = errCount;
+                log("✗ Push notification xatosi: " + e.message, "err");
+            }
+
+            // ── YAKUNIY HISOBOT ───────────────────────────────
+            progress.style.width = "100%";
+            log(`✅ Migration yakunlandi! ${doneCount} ta ko'chirildi, ${errCount} ta xatolik`, errCount > 0 ? "warn" : "ok");
+
+        } catch (e) {
+            log("❌ Asosiy xatolik: " + e.message, "err");
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    // ── TEKSHIRISH ────────────────────────────────────────
+    document.getElementById("verifyBtn").addEventListener("click", async () => {
+        log("Firestore tekshirilmoqda...", "info");
+        try {
+            const postsSnap = await getDocs(collection(firestore, "posts"));
+            const usersSnap = await getDocs(collection(firestore, "users"));
+            log(`Firestore: ${postsSnap.size} post, ${usersSnap.size} user`, "ok");
+        } catch (e) {
+            log("Tekshirishda xatolik: " + e.message, "err");
+        }
+    });
+    </script>
+</body>
+</html>
