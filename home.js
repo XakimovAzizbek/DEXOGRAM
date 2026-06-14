@@ -1,6 +1,6 @@
 // 1. Firebase Modullarini CDN orqali import qilamiz
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, get, set, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, get, set, runTransaction, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 // 2. Sizning Firebase Konfiguratsiyangiz
 const firebaseConfig = {
@@ -157,3 +157,73 @@ async function toggleLike(postId, button) {
 
 // Sahifa ochilishi bilan feedni yuklaymiz
 window.onload = loadFeed;
+// ── PUSH NOTIFICATION ─────────────────────────────────────
+// Firebase: pushNotification/{enabled, title, description, buttonText, buttonLink}
+// Faqat shu qism qo'shildi — boshqa hech narsa o'zgartirilmadi
+(function initPushNotification() {
+    const pushNotif   = document.getElementById("pushNotif");
+    const pushClose   = document.getElementById("pushClose");
+    const pushTitle   = document.getElementById("pushTitle");
+    const pushDesc    = document.getElementById("pushDesc");
+    const pushBtn     = document.getElementById("pushActionBtn");
+    const pushProgress = document.getElementById("pushProgress");
+
+    let hideTimer    = null;
+    let progInterval = null;
+
+    function showPush(data) {
+        // Eski timerni o'chiramiz
+        if (hideTimer)    clearTimeout(hideTimer);
+        if (progInterval) clearInterval(progInterval);
+
+        pushTitle.textContent = data.title       || "";
+        pushDesc.textContent  = data.description || "";
+
+        if (data.buttonText && data.buttonLink) {
+            pushBtn.textContent = data.buttonText;
+            pushBtn.href        = data.buttonLink;
+            pushBtn.style.display = "inline-block";
+        } else {
+            pushBtn.style.display = "none";
+        }
+
+        // Progress bar
+        pushProgress.style.transition = "none";
+        pushProgress.style.width      = "100%";
+
+        pushNotif.style.display = "flex";
+        // Animate in
+        requestAnimationFrame(() => {
+            pushNotif.classList.add("push-show");
+        });
+
+        // Progress bar animatsiyasi 10 soniya
+        setTimeout(() => {
+            pushProgress.style.transition = "width 10s linear";
+            pushProgress.style.width      = "0%";
+        }, 50);
+
+        // 10 soniyadan keyin yashiramiz
+        hideTimer = setTimeout(() => hidePush(), 10000);
+    }
+
+    function hidePush() {
+        if (hideTimer)    clearTimeout(hideTimer);
+        if (progInterval) clearInterval(progInterval);
+        pushNotif.classList.remove("push-show");
+        setTimeout(() => { pushNotif.style.display = "none"; }, 400);
+    }
+
+    pushClose.addEventListener("click", hidePush);
+
+    // Firebase dan real-time tinglash
+    onValue(ref(db, "pushNotification"), (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.val();
+        if (data.enabled === true) {
+            showPush(data);
+        } else {
+            hidePush();
+        }
+    });
+})();
