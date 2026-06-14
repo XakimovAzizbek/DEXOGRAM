@@ -119,7 +119,7 @@ onValue(ref(db, "posts"), snapshot => {
             '<img src="' + (post.thumbnail_url || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Crect fill='%23161b22'/%3E%3C/svg%3E") + '" alt="" ' +
             'onerror="this.src=\'data:image/svg+xml,%3Csvg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 100 100\\\'%3E%3Crect fill=\\\'%23161b22\\\' width=\\\'100\\\' height=\\\'100\\\'/%3E%3Ctext x=\\\'50\\\' y=\\\'55\\\' text-anchor=\\\'middle\\\' font-size=\\\'30\\\' fill=\\\'%2300ffff\\\'%3E▶%3C/text%3E%3C/svg%3E\'">' +
             '<div class="play-icon">▶</div>';
-        thumb.addEventListener("click", () => openVideoModal(post));
+        thumb.addEventListener("click", () => { window.location.href = "profile_reels.html?id=" + post.id; });
         videosGrid.appendChild(thumb);
     });
 });

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dexogram - Video</title>
+    <link rel="stylesheet" href="profile_reels.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+
+    <!-- Orqaga tugmasi -->
+    <button class="pr-back-btn" id="prBackBtn">←</button>
+
+    <!-- Loading -->
+    <div class="pr-loading" id="prLoading">
+        <div class="pr-spinner"></div>
+    </div>
+
+    <!-- Video wrapper -->
+    <div class="pr-reel-wrap" id="prReelWrap" style="display:none;">
+
+        <video class="pr-video" id="prVideo" loop playsinline webkit-playsinline muted></video>
+
+        <!-- Audio icon -->
+        <div class="pr-audio-icon" id="prAudioIcon">🔊</div>
+
+        <!-- Chap — tavsif -->
+        <div class="pr-overlay-left">
+            <div class="pr-user-id" id="prUserId"></div>
+            <div class="pr-caption" id="prCaption"></div>
+        </div>
+
+        <!-- O'ng — tugmalar -->
+        <div class="pr-overlay-right">
+
+            <!-- Layk -->
+            <button class="pr-action-btn" id="prLikeBtn">
+                <span class="pr-icon" id="prLikeIcon">🤍</span>
+                <span id="prLikeCount">0</span>
+            </button>
+
+            <!-- Sharh -->
+            <button class="pr-action-btn" id="prCommentBtn">
+                <span>💬</span>
+                <span id="prCommentCount">0</span>
+            </button>
+
+            <!-- Ulashish -->
+            <button class="pr-action-btn" id="prShareBtn">
+                <span>✈️</span>
+                <span>Ulash</span>
+            </button>
+
+            <!-- 3 nuqta (faqat owner uchun) -->
+            <button class="pr-action-btn pr-dots-btn" id="prDotsBtn" style="display:none;">
+                <span>⋮</span>
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- 3 nuqta menyusi -->
+    <div class="pr-dots-menu" id="prDotsMenu" style="display:none;">
+        <div class="pr-dots-overlay" id="prDotsOverlay"></div>
+        <div class="pr-dots-content">
+            <button class="pr-dots-item" id="prEditBtn">✏️ Tavsifni tahrirlash</button>
+            <button class="pr-dots-item danger" id="prDeleteBtn">🗑️ Videoni o'chirish</button>
+        </div>
+    </div>
+
+    <!-- Tahrirlash modal -->
+    <div class="pr-edit-overlay" id="prEditOverlay" style="display:none;">
+        <div class="pr-edit-bg" id="prEditBg"></div>
+        <div class="pr-edit-box">
+            <h4>Tavsifni Tahrirlash</h4>
+            <textarea id="prEditInput" placeholder="Yangi tavsif yozing..."></textarea>
+            <div class="pr-edit-btns">
+                <button class="pr-btn-cancel" id="prCancelEdit">Bekor</button>
+                <button class="pr-btn-save" id="prSaveEdit">Saqlash</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sharh modali -->
+    <div class="pr-comment-overlay" id="prCommentOverlay" style="display:none;">
+        <div class="pr-comment-bg" id="prCommentBg"></div>
+        <div class="pr-comment-box">
+            <div class="pr-comment-header">
+                <span>Sharhlar</span>
+                <button class="pr-comment-close" id="prCommentClose">&times;</button>
+            </div>
+            <div class="pr-comments-list" id="prCommentsList"></div>
+            <div class="pr-comment-input-row">
+                <input type="text" id="prCommentInput" placeholder="Sharh yozing...">
+                <button id="prSendComment">✈️</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="profile_reels.js"></script>
+</body>
+</html>
